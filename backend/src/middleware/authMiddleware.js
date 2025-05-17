@@ -16,30 +16,31 @@ const protect = async (req, res, next) => {
       // Get token from header
       token = req.headers.authorization.split(' ')[1];
 
-      // First, try to decode the token to see if it's a custom token
-      // Custom tokens have a specific format we can check
+      // First, decode the token to get the UID
+      const decoded = jwt.decode(token);
+      
+      if (!decoded) {
+        return res.status(401).json({
+          success: false,
+          error: 'Not authorized, invalid token format'
+        });
+      }
+      
+      // Extract UID from the token claims
+      // Custom tokens have different structure than ID tokens
+      const uid = decoded.uid || 
+                (decoded.claims && decoded.claims.uid) || 
+                (decoded.sub);
+      
+      if (!uid) {
+        return res.status(401).json({
+          success: false,
+          error: 'Not authorized, token missing user ID'
+        });
+      }
+      
+      // Get user info from Firebase Auth
       try {
-        // Just decode the token, don't verify signature
-        const decoded = jwt.decode(token);
-        
-        if (!decoded) {
-          return res.status(401).json({
-            success: false,
-            error: 'Not authorized, invalid token format'
-          });
-        }
-        
-        // Check if this is a Firebase custom token by looking for uid field
-        const uid = decoded.uid || (decoded.claims && decoded.claims.sub);
-        
-        if (!uid) {
-          return res.status(401).json({
-            success: false,
-            error: 'Not authorized, token missing user ID'
-          });
-        }
-        
-        // Get user info from Firebase Auth
         const user = await auth.getUser(uid);
         
         // Add the user data to the request
@@ -51,11 +52,11 @@ const protect = async (req, res, next) => {
         };
         
         next();
-      } catch (error) {
-        console.error('Error verifying auth token:', error);
+      } catch (userErr) {
+        console.error('Failed to get user from Firebase:', userErr);
         return res.status(401).json({
           success: false,
-          error: 'Not authorized, invalid token'
+          error: 'Not authorized, user not found'
         });
       }
     } catch (error) {
