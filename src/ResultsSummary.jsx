@@ -1,44 +1,75 @@
 import React, { useState } from 'react';
 
+// Updated categories to use string IDs that match the backend ('q1', 'q2', etc.)
 const CATEGORIES = {
-    'Social Awareness & Interaction': [1, 2, 4, 6, 7],
-    'Communication & Gestures': [3, 5, 9],
-    'Play & Imitation': [8, 10]
+    'Social Awareness & Interaction': ['q1', 'q2', 'q4', 'q6', 'q7'],
+    'Communication & Gestures': ['q3', 'q5', 'q9'],
+    'Play & Imitation': ['q8', 'q10']
 };
 
 const RESPONSE_COLORS = {
-    often: '#4CAF50',    // Green
+    always: '#4CAF50',    // Green
+    often: '#2196F3',     // Blue
     sometimes: '#f9c32b', // Yellow
-    never: '#f44336'     // Red
+    rarely: '#FF9800',    // Orange
+    never: '#f44336'      // Red
 };
 
 const getSummaryForGroup = (counts) => {
-    const total = counts.often + counts.sometimes + counts.never;
-    if (counts.often >= total / 2) return "Your child shows typical behaviors in this area.";
-    if (counts.never >= total / 2) return "Some behaviors may be delayed. Consider speaking to a specialist.";
+    const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+    // Consider "always" and "often" as positive indicators
+    const positiveResponses = (counts.always || 0) + (counts.often || 0);
+    // Consider "never" and "rarely" as concerning indicators
+    const negativeResponses = (counts.never || 0) + (counts.rarely || 0);
+    
+    if (positiveResponses >= total / 2) return "Your child shows typical behaviors in this area.";
+    if (negativeResponses >= total / 2) return "Some behaviors may be delayed. Consider speaking to a specialist.";
     return "Your child may be developing these skills. Keep observing.";
 };
 
 const getOverallSummary = (totalCounts) => {
-    const total = totalCounts.often + totalCounts.sometimes + totalCounts.never;
-    if (totalCounts.often >= total / 2) {
+    const total = Object.values(totalCounts).reduce((sum, count) => sum + count, 0);
+    // Consider "always" and "often" as positive indicators
+    const positiveResponses = (totalCounts.always || 0) + (totalCounts.often || 0);
+    // Consider "never" and "rarely" as concerning indicators
+    const negativeResponses = (totalCounts.never || 0) + (totalCounts.rarely || 0);
+    
+    if (positiveResponses >= total / 2) {
         return "Your child shows many expected behaviors. Keep supporting their growth!";
     }
-    if (totalCounts.never >= total / 2) {
+    if (negativeResponses >= total / 2) {
         return "This screening suggests possible signs of delay. Consider speaking to a professional.";
     }
     return "You may want to continue observing your child's development.";
 };
 
-function ResultsSummary({ answers }) {
+function ResultsSummary({ answers, savedResult, onBack }) {
     const [activeTab, setActiveTab] = useState('summary');
     const categoryCounts = {};
-    const totalCounts = { often: 0, sometimes: 0, never: 0 };
+    const totalCounts = { always: 0, often: 0, sometimes: 0, rarely: 0, never: 0 };
+
+    // Process answers differently based on whether they're from direct user input or savedResult
+    let processedAnswers = answers;
+    
+    // If we have savedResult, use its answers instead
+    if (savedResult && savedResult.answers) {
+        processedAnswers = Object.entries(savedResult.answers).map(([id, value]) => ({
+            id,
+            answer: value
+        }));
+    }
+    
+    // Debug the answers
+    console.log("Processing answers:", processedAnswers);
 
     Object.entries(CATEGORIES).forEach(([category, questionIds]) => {
-        categoryCounts[category] = { often: 0, sometimes: 0, never: 0 };
+        categoryCounts[category] = { always: 0, often: 0, sometimes: 0, rarely: 0, never: 0 };
         questionIds.forEach(id => {
-            const answer = answers.find(a => a.id === id)?.answer.toLowerCase() || '';
+            // Find the answer for this question by ID (either numeric or string)
+            const answer = processedAnswers.find(a => 
+                a.id === id || a.id === parseInt(id.replace('q', '')) || a.id.toString() === id
+            )?.answer?.toLowerCase() || '';
+            
             if (answer) {
                 categoryCounts[category][answer.toLowerCase()]++;
                 totalCounts[answer.toLowerCase()]++;
@@ -48,8 +79,23 @@ function ResultsSummary({ answers }) {
 
     const getPercentage = (count, total) => (total > 0 ? (count / total) * 100 : 0);
     const total = Object.values(totalCounts).reduce((a, b) => a + b, 0);
+    
+    // Find the most common response
     const mainResponse = Object.entries(totalCounts)
-        .sort(([,a], [,b]) => b - a)[0][0];
+        .sort(([,a], [,b]) => b - a)
+        .filter(([,count]) => count > 0)[0]?.[0] || 'sometimes';
+
+    // Get risk level and recommendations from saved result if available
+    const riskLevel = savedResult?.riskLevel || 
+        ((totalCounts.always || 0) + (totalCounts.often || 0) >= total / 2 ? 'Low' : 
+         (totalCounts.never || 0) + (totalCounts.rarely || 0) >= total / 2 ? 'High' : 'Medium');
+    
+    const recommendations = savedResult?.recommendations || [
+        'Discuss these results with your child\'s healthcare provider',
+        'Continue monitoring your child\'s development',
+        'Engage in face-to-face play activities that encourage social interaction',
+        'Create opportunities for communication through daily activities'
+    ];
 
     const TabButton = ({ id, label, active }) => (
         <button
@@ -75,6 +121,20 @@ function ResultsSummary({ answers }) {
     return (
         <div style={{ maxWidth: '44rem', margin: '2rem auto', padding: '0 1rem' }}>
             <h1 style={{ fontSize: '1.5rem', textAlign: 'center', fontWeight: 600, color: '#333', marginBottom: '2rem' }}>Assessment Results</h1>
+            
+            {/* Success Message if Result was Saved */}
+            {savedResult && (
+                <div style={{ 
+                    background: '#e8f5e9', 
+                    color: '#2e7d32', 
+                    padding: '0.75rem 1rem', 
+                    borderRadius: '0.5rem', 
+                    marginBottom: '1.5rem',
+                    border: '1px solid #a5d6a7'
+                }}>
+                    Results have been saved successfully.
+                </div>
+            )}
             
             {/* Quick Summary Card */}
             <div style={{ 
@@ -105,6 +165,25 @@ function ResultsSummary({ answers }) {
                         <p>{getOverallSummary(totalCounts)}</p>
                     </div>
                 </div>
+                
+                {savedResult && (
+                    <div style={{ 
+                        marginTop: '1rem', 
+                        padding: '0.75rem', 
+                        background: '#f5f5f5', 
+                        borderRadius: '0.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                    }}>
+                        <span style={{ 
+                            fontWeight: '600', 
+                            color: riskLevel === 'Low' ? '#2e7d32' : riskLevel === 'Medium' ? '#f57c00' : '#c62828' 
+                        }}>
+                            Risk Level: {riskLevel}
+                        </span>
+                    </div>
+                )}
             </div>
 
             {/* Navigation Tabs */}
@@ -154,6 +233,13 @@ function ResultsSummary({ answers }) {
                                 </div>
                             );
                         })}
+                        
+                        {savedResult?.notes && (
+                            <div style={{ marginTop: '2rem', padding: '1rem', background: '#f5f5f5', borderRadius: '0.5rem' }}>
+                                <h3 style={{ color: '#333', marginBottom: '0.5rem' }}>Notes</h3>
+                                <p style={{ whiteSpace: 'pre-wrap' }}>{savedResult.notes}</p>
+                            </div>
+                        )}
                     </>
                 ) : (
                     // Next Steps Tab
@@ -170,12 +256,7 @@ function ResultsSummary({ answers }) {
 
                         <h3 style={{ color: '#444', marginBottom: '1rem' }}>Suggested Steps</h3>
                         <ul style={{ listStyle: 'none', padding: 0, marginBottom: '2rem' }}>
-                            {[
-                                'Keep a daily journal of your child\'s behaviors and interactions',
-                                'Engage in face-to-face play activities that encourage social interaction',
-                                'Create opportunities for communication through daily activities',
-                                'If concerned, seek evaluation from healthcare professionals'
-                            ].map((step, index) => (
+                            {recommendations.map((step, index) => (
                                 <li key={index} style={{ 
                                     marginBottom: '0.75rem', 
                                     paddingLeft: '1.5rem', 
@@ -212,6 +293,24 @@ function ResultsSummary({ answers }) {
                 )}
             </div>
 
+            {/* Back Button */}
+            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                <button 
+                    onClick={onBack}
+                    style={{
+                        background: '#f5f5f5',
+                        border: '1px solid #ddd',
+                        color: '#333',
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                        fontWeight: '500'
+                    }}
+                >
+                    Back to Profile
+                </button>
+            </div>
+
             {/* Privacy Note */}
             <div style={{ 
                 marginTop: '1rem',
@@ -219,7 +318,7 @@ function ResultsSummary({ answers }) {
                 color: '#666',
                 fontSize: '0.9rem'
             }}>
-                <p><em>Privacy Note: Your answers are saved only on your device. No data is sent or stored on a server.</em></p>
+                <p><em>Privacy Note: Your answers are saved securely in accordance with our privacy policy.</em></p>
             </div>
         </div>
     );

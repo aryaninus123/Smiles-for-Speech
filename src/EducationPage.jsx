@@ -59,13 +59,13 @@ const RESOURCES = [
         title: 'Ghana Resources',
         links: [
             {
-                name: 'Autism Awareness Care and Training (AACT)',
-                url: 'http://aactgh.org',
-                description: 'Provides support, training, and resources for families in Ghana'
+                name: 'Autism Awareness Centre',
+                url: 'https://autismawarenesscentre.com/resources/autism-awareness-care-training-aact-ghana/',
+                description: 'Provides support, training, and resources for families with autistic childrenin Ghana'
             },
             {
-                name: 'Autism Assistance Ghana',
-                url: 'https://autismassistancegh.org',
+                name: 'Autism Awareness Care and Training',
+                url: 'https://aactgh.org/',
                 description: 'Offers educational programs and community support'
             }
         ]
