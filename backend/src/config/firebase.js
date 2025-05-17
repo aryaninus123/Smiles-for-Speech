@@ -8,8 +8,7 @@ const serviceAccount = require(path.join(__dirname, '..', '..', 'firebase-creden
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`,
-    storageBucket: 'smiles-for-speech-1b81d.firebasestorage.app'
+    storageBucket: 'smiles-for-speech-1b81d.appspot.com'
   });
 }
 
