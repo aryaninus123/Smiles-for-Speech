@@ -48,6 +48,9 @@ const getCurrentUser = async (req, res) => {
  */
 const updateUserProfile = async (req, res) => {
   try {
+    console.log('Received profile update request:', req.body);
+    console.log('User from token:', req.user);
+    
     const { name, phone, address, role, age, profilePicture } = req.body;
     
     // Check if user already exists
@@ -56,8 +59,11 @@ const updateUserProfile = async (req, res) => {
       .limit(1)
       .get();
 
+    console.log('User exists in Firestore:', !userSnapshot.empty);
+
     if (userSnapshot.empty) {
       // Create new user profile
+      console.log('Creating new user profile');
       const newUser = {
         uid: req.user.uid,
         email: req.user.email,
@@ -78,15 +84,26 @@ const updateUserProfile = async (req, res) => {
       });
     } else {
       // Update existing user profile
+      console.log('Updating existing user profile');
       const userRef = userSnapshot.docs[0].ref;
-      const userData = {
-        name: name || userSnapshot.docs[0].data().name,
-        phone: phone || userSnapshot.docs[0].data().phone,
-        address: address || userSnapshot.docs[0].data().address,
-        age: age || userSnapshot.docs[0].data().age || 'N/A',
-        profilePicture: profilePicture || userSnapshot.docs[0].data().profilePicture || '',
-        updatedAt: new Date().toISOString()
-      };
+      
+      // Create update object with only defined values
+      const userData = {};
+      
+      // Always include these fields with fallback values
+      userData.name = name || userSnapshot.docs[0].data().name || 'User';
+      userData.age = age || userSnapshot.docs[0].data().age || 'N/A';
+      userData.profilePicture = profilePicture || userSnapshot.docs[0].data().profilePicture || '';
+      
+      // Only add other fields if they're defined
+      if (phone !== undefined) userData.phone = phone;
+      if (address !== undefined) userData.address = address;
+      if (role !== undefined) userData.role = role || 'parent';
+      
+      // Always add updatedAt timestamp
+      userData.updatedAt = new Date().toISOString();
+      
+      console.log('Updated data:', userData);
       
       await userRef.update(userData);
       
@@ -103,7 +120,8 @@ const updateUserProfile = async (req, res) => {
     console.error('Error updating user profile:', error);
     res.status(500).json({
       success: false,
-      error: 'Server error'
+      error: 'Server error',
+      message: error.message
     });
   }
 };

@@ -7,6 +7,8 @@ const jwt = require('jsonwebtoken');
 const protect = async (req, res, next) => {
   let token;
 
+  console.log('Auth headers:', req.headers.authorization ? 'Present' : 'Missing');
+
   // Check for token in Authorization header
   if (
     req.headers.authorization &&
@@ -15,11 +17,14 @@ const protect = async (req, res, next) => {
     try {
       // Get token from header
       token = req.headers.authorization.split(' ')[1];
+      console.log('Token found in request');
 
       // First, decode the token to get the UID
       const decoded = jwt.decode(token);
+      console.log('Decoded token:', decoded ? 'Valid' : 'Invalid');
       
       if (!decoded) {
+        console.log('Invalid token format - could not decode');
         return res.status(401).json({
           success: false,
           error: 'Not authorized, invalid token format'
@@ -32,6 +37,8 @@ const protect = async (req, res, next) => {
                 (decoded.claims && decoded.claims.uid) || 
                 (decoded.sub);
       
+      console.log('Extracted UID from token:', uid || 'Not found');
+      
       if (!uid) {
         return res.status(401).json({
           success: false,
@@ -41,7 +48,9 @@ const protect = async (req, res, next) => {
       
       // Get user info from Firebase Auth
       try {
+        console.log('Verifying user with Firebase Auth');
         const user = await auth.getUser(uid);
+        console.log('User verified with Firebase Auth');
         
         // Add the user data to the request
         req.user = {
@@ -51,6 +60,7 @@ const protect = async (req, res, next) => {
           emailVerified: user.emailVerified
         };
         
+        console.log('User data added to request:', req.user);
         next();
       } catch (userErr) {
         console.error('Failed to get user from Firebase:', userErr);
@@ -67,6 +77,7 @@ const protect = async (req, res, next) => {
       });
     }
   } else {
+    console.log('No authorization token found in request');
     return res.status(401).json({
       success: false,
       error: 'Not authorized, no token'

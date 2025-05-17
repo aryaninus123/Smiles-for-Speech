@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import { authAPI } from './services/api';
+import { setToken, setUser } from './utils/auth';
 
 function LoginPage() {
     const [email, setEmail] = useState('');
@@ -8,6 +9,10 @@ function LoginPage() {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const history = useHistory();
+    const location = useLocation();
+
+    // Get the page the user was trying to access before being redirected to login
+    const { from } = location.state || { from: { pathname: '/profile' } };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -17,13 +22,16 @@ function LoginPage() {
         try {
             const response = await authAPI.login(email, password);
             
-            // Store the token in localStorage
+            // Store the token and user data using auth utilities
             if (response.token) {
-                localStorage.setItem('token', response.token);
+                setToken(response.token);
+                if (response.user) {
+                    setUser(response.user);
+                }
             }
             
-            // Redirect to dashboard or profile page
-            history.push('/profile');
+            // Redirect to the page the user was trying to access, or profile by default
+            history.push(from);
         } catch (err) {
             setError(err.message || 'Failed to log in. Please check your credentials.');
         } finally {
