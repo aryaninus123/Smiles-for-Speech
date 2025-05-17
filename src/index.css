@@ -1,3 +1,153 @@
 @tailwind base;
 @tailwind components;
-@tailwind utilities; 
+@tailwind utilities;
+
+/* Custom styles for Smiles for Speech landing page */
+
+.sfs-root {
+    min-height: 100vh;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+.sfs-navbar {
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid #f9c32b;
+}
+
+.sfs-navbar-content {
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 5rem;
+}
+
+.sfs-navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sfs-logo {
+    height: 3.5rem;
+    width: 3.5rem;
+    border-radius: 9999px;
+    border: 2px solid #f9c32b;
+    background: #fff;
+    min-width: 3.5rem;
+}
+
+.sfs-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #111;
+    letter-spacing: 0.01em;
+}
+
+.sfs-navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.sfs-link {
+    color: #111;
+    font-size: 1.125rem;
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    transition: color 0.2s, background 0.2s;
+}
+
+.sfs-link:hover,
+.sfs-link:focus {
+    color: #f9c32b;
+    outline: 2px solid #f9c32b;
+    outline-offset: 2px;
+}
+
+.sfs-login-btn {
+    background: #f9c32b;
+    color: #111;
+    font-size: 1.125rem;
+    font-weight: 700;
+    padding: 0.5rem 1.5rem;
+    border-radius: 9999px;
+    border: 1px solid #f9c32b;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: background 0.2s, color 0.2s;
+    text-decoration: none;
+}
+
+.sfs-login-btn:hover,
+.sfs-login-btn:focus {
+    background: #ffd966;
+    color: #111;
+    outline: 2px solid #f9c32b;
+    outline-offset: 2px;
+}
+
+.sfs-hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.sfs-hero-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #111;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+    .sfs-hero-title {
+        font-size: 3rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .sfs-hero-title {
+        font-size: 3.75rem;
+    }
+}
+
+.sfs-hero-desc {
+    font-size: 1.125rem;
+    color: #111;
+    margin-bottom: 2.5rem;
+    max-width: 36rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.sfs-get-started-btn {
+    background: #f9c32b;
+    color: #111;
+    font-size: 1.25rem;
+    font-weight: 700;
+    padding: 0.75rem 2rem;
+    border-radius: 9999px;
+    border: 1px solid #f9c32b;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: background 0.2s, color 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.sfs-get-started-btn:hover,
+.sfs-get-started-btn:focus {
+    background: #ffd966;
+    color: #111;
+    outline: 2px solid #f9c32b;
+    outline-offset: 2px;
+}
