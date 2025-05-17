@@ -1,33 +1,28 @@
 import React, { useState } from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { authAPI } from './services/api';
 
-function LoginPage() {
+function ForgotPassword() {
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const history = useHistory();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [status, setStatus] = useState('idle'); // 'idle', 'success', 'error'
+    const [message, setMessage] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-        setIsLoading(true);
+        setIsSubmitting(true);
+        setStatus('idle');
+        setMessage('');
         
         try {
-            const response = await authAPI.login(email, password);
-            
-            // Store the token in localStorage
-            if (response.token) {
-                localStorage.setItem('token', response.token);
-            }
-            
-            // Redirect to dashboard or profile page
-            history.push('/profile');
-        } catch (err) {
-            setError(err.message || 'Failed to log in. Please check your credentials.');
+            await authAPI.forgotPassword(email);
+            setStatus('success');
+            setMessage('If an account exists with this email, a password reset link will be sent.');
+        } catch (error) {
+            setStatus('error');
+            setMessage(error.message || 'Failed to send password reset. Please try again.');
         } finally {
-            setIsLoading(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -46,23 +41,32 @@ function LoginPage() {
                     <div className="sfs-navbar-links">
                         <Link to="/" className="sfs-link">Home</Link>
                         <Link to="/about" className="sfs-link">About Us</Link>
-                        <Link to="/login" className="sfs-login-btn" aria-current="page" aria-label="Log in to your account">Log In</Link>
+                        <Link to="/login" className="sfs-login-btn" aria-label="Log in to your account">Log In</Link>
                     </div>
                 </div>
             </nav>
 
-            {/* Login Form Section */}
+            {/* Forgot Password Form */}
             <main className="sfs-hero">
                 <form 
                     className="sfs-login-form" 
                     style={{ maxWidth: '24rem', width: '100%', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '2rem', margin: '0 auto' }}
                     onSubmit={handleSubmit}
                 >
-                    <h2 className="sfs-hero-title" style={{ fontSize: '2rem', marginBottom: '1rem' }}>Log In</h2>
+                    <h2 className="sfs-hero-title" style={{ fontSize: '2rem', marginBottom: '1rem' }}>Reset Password</h2>
+                    <p style={{ marginBottom: '1.5rem', color: '#555' }}>
+                        Enter your email address and we'll send you a link to reset your password.
+                    </p>
                     
-                    {error && (
+                    {status === 'success' && (
+                        <div style={{ padding: '0.75rem', background: '#e8f5e9', color: '#2e7d32', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                            {message}
+                        </div>
+                    )}
+                    
+                    {status === 'error' && (
                         <div style={{ padding: '0.75rem', background: '#ffebee', color: '#c62828', borderRadius: '0.5rem', marginBottom: '1rem' }}>
-                            {error}
+                            {message}
                         </div>
                     )}
                     
@@ -80,32 +84,17 @@ function LoginPage() {
                             onChange={(e) => setEmail(e.target.value)}
                         />
                     </div>
-                    <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
-                        <label htmlFor="password" style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#111' }}>Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            className="sfs-login-input"
-                            style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #ccc', fontSize: '1rem' }}
-                            required
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
-                    </div>
                     <button 
                         type="submit" 
                         className="sfs-get-started-btn" 
-                        style={{ width: '100%' }}
-                        disabled={isLoading}
+                        style={{ width: '100%', marginBottom: '1rem' }}
+                        disabled={isSubmitting}
                     >
-                        {isLoading ? 'Logging in...' : 'Log In'}
+                        {isSubmitting ? 'Sending...' : 'Send Reset Link'}
                     </button>
                     
                     <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-                        <p>Don't have an account? <Link to="/signup" style={{ color: '#0277bd', textDecoration: 'underline' }}>Sign up</Link></p>
-                        <p style={{ marginTop: '0.5rem' }}><Link to="/forgot-password" style={{ color: '#0277bd', textDecoration: 'underline' }}>Forgot password?</Link></p>
+                        <p>Remember your password? <Link to="/login" style={{ color: '#0277bd', textDecoration: 'underline' }}>Log in</Link></p>
                     </div>
                 </form>
             </main>
@@ -113,4 +102,4 @@ function LoginPage() {
     );
 }
 
-export default LoginPage; 
+export default ForgotPassword; 
