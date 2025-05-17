@@ -12,7 +12,7 @@ function ProfilePage() {
     const [email, setEmail] = useState('');
     const [emailVerified, setEmailVerified] = useState(false);
     const [age, setAge] = useState('N/A');
-    const [profilePic, setProfilePic] = useState('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZ0FpBg5Myb9CQ-bQpFou9BY9JXoRG6208_Q&s');
+    const [profilePic, setProfilePic] = useState('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAPFBMVEXk5ueutLepsLPo6uursbXJzc/p6+zj5ea2u76orrKvtbi0ubzZ3N3O0dPAxcfg4uPMz9HU19i8wcPDx8qKXtGiAAAFTElEQVR4nO2d3XqzIAyAhUD916L3f6+f1m7tVvtNINFg8x5tZ32fQAIoMcsEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQTghAJD1jWtnXJPP/54IgNzZQulSmxvTH6oYXX4WS+ivhTbqBa1r26cvCdCu6i0YXbdZ0o4A1rzV+5IcE3YE+z58T45lqo7g1Aa/JY5tgoqQF3qb382x7lNzBLcxft+O17QUYfQI4IIeklKsPSN4i6LKj/7Zm8n99RbHJpEw9gEBXNBpKIYLJqKYRwjOikf//r+J8ZsVuacbqCMNleI9TqGLGqMzhnVdBOdd6F/RlrFijiCoVMk320CBIahUxTWI0KKEcJqKbMdpdJb5QvdHq6wCI5qhKlgGMS/RBHkubWDAE+QZxB4xhCyDiDkLZxgGEVdQldzSKbTIhmZkFkSEPcVvmBn2SMuZB9od7fQDsMiDdKJjFUSCQarM5WirZ3C2TT/htYnyPcPfgrFHWz0BI74gr6J/IZiGUxAZGQLqmvQLTrtE/Go4YxhVRIpEw+sww1IIcqr5NKmUUzLF3d4/qPkYIp2T/obPuemlojFUR4t9Q2Vojhb7BmgElWHzLPH8hucfpefPNFTVgs9h1AdU/Pin96vwWbWdf+X9Absn3OdO34aMdsDnP8WgKYisTqI6CkNGqZQo1XA6Ef6AU32SJzOcBukHPF07/xNSgmHKa5BOhtezv6mA/rYJpwXNAnbRZ1XuF3BzDcO3vpA3+ny2909gbqE4hhD3LIPhLLyBNhPZvbZ3B+3tPYa18A7auSlXQayKwTPNLKDcuOB0xPYKDPFTkWsevQPRZ1J8Hji9I1KQ34r7hZhrwNwOZ97QxNx0drwn4QI0wQk1DcEsfKCWKdxVvxPSNUIp/knmAXT+nT+Ko3+0H96rcNb3m1fx7MBTJdeBJ7uFcWsc0wvgAsC4pROW0l2inbAmIBv/7GZmuhQH6API2rr8T0e6yuZJ+80A9LZeG62T3tik31XwxtwZcizKuTHkMjB1WdZde4Kmic/A5ZI3rr1ae21d08PlVHYfAaxw9G9CYRbJ+8ZdbTcMRV1XM3VdF0M32vtoTdZ0+u29s0OttJ5bz64UwinjaFMVY9vkqc3KKSxN21Xl+0L4Q3Vuv1tYl0pqnX6ms4XetFz7gdZVAgUEoJntfOUe4ZwsHd9FzqQ3Vv6xe41l0XJcqcKl6TZvlv7ClAW3BsqQW4X7ypApB8dmTgK4IX5wvqIVj33HtD2qSG4BqznxdIefL27Y4sahi0MdIdvUsDva8agGGbCtITmCY31MHD2O0uIdh/0rJDQ1VX5Zdxz3rR2QDbv6qXl9vudzqQtGm1Jv9LDXOsfvvB7VcZ8PDKD0mQ1VHPYQ9O+Yj4hR1IUD8rBnn3ho2m8oQMxbCFiKlL2ioSW5heeJqegED52CzxCtcGD3Kv8Wms9EYLyUhwaFIhSMBClevWEmiK/Iaogu4H7sg6ppQhQG8RUqivuTGOAJOg6FfgW0q0M0PQMRMEgXaeNf3SYDZ8PIMI0+wHgr/MgN7wYwpiLjCCqM6ydUDZLQiB6nDdNC8SDyig3jPPpFXGcC9O8BUBDVmgBY59E7Md/35Loe/UVEECEJwYggJjELZ4J71SaQSBeC02n4Da29CayJNA28SAhd2CQyC1Xw6pSmGSINQVuMhAZp4DClan9MgmkDDNmezqwS8sgtlXK/EPBhoaSmYVC/F7IO1jQEdHOlabpKh3+jzLQSTUiq4X2I+Ip/zU8rlaqAvkS21ElR+gqu3zbjjL+hIAiCIAiCIAiCIAiCsCf/AKrfVhSbvA+DAAAAAElFTkSuQmCC');
     const [testResult, setTestResult] = useState('No test result available.');
     const [summary, setSummary] = useState('No summary available.');
 
@@ -37,7 +37,7 @@ function ProfilePage() {
                     history.push('/login');
                     return;
                 }
-                
+
                 // Get current user data
                 const userData = await authAPI.checkEmailVerification();
                 if (userData && userData.data) {
@@ -45,7 +45,7 @@ function ProfilePage() {
                     setName(userData.data.name || 'User');
                     setEmail(userData.data.email || '');
                     setEmailVerified(userData.data.emailVerified || false);
-                    
+
                     // Update age and profile picture if available in the response
                     if (userData.data.age) setAge(userData.data.age);
                     if (userData.data.profilePicture) setProfilePic(userData.data.profilePicture);
@@ -111,11 +111,11 @@ function ProfilePage() {
     const handleSave = async (e) => {
         e.preventDefault();
         setLoading(true);
-        
+
         try {
             console.log("Starting profile update...");
             let profilePicUrl = profilePic;
-            
+
             // Step 1: If a new profile picture was selected, upload it to Firebase Storage
             if (editProfileFile) {
                 console.log("Uploading profile picture...");
@@ -132,7 +132,7 @@ function ProfilePage() {
                     throw new Error(`Failed to upload image: ${uploadError.message}`);
                 }
             }
-            
+
             // Step 2: Update user profile in Firestore with the new data
             const profileData = {
                 name: editName || 'User',
@@ -140,14 +140,14 @@ function ProfilePage() {
                 profilePicture: profilePicUrl || '',
                 email: email || user?.email || ''
             };
-            
+
             console.log("Sending profile data to server:", profileData);
-            
+
             // Call the API to update the user profile
             try {
                 const result = await authAPI.updateProfile(profileData);
                 console.log("Profile update result:", result);
-                
+
                 // If successful, update the local cache
                 if (result && result.data) {
                     // Update the user in localStorage
@@ -161,15 +161,15 @@ function ProfilePage() {
                 console.error("Error updating profile data:", updateError);
                 throw new Error(`Failed to update profile data: ${updateError.message}`);
             }
-            
+
             // Update local state with the new values
             setName(editName);
             setAge(editAge);
             setProfilePic(profilePicUrl);
-            
+
             // Exit edit mode
             setEditing(false);
-            
+
             // Show success message
             alert('Profile updated successfully!');
         } catch (error) {
@@ -250,26 +250,62 @@ function ProfilePage() {
     }
 
     return (
-        <div className="sfs-root">
+        <div className="sfs-root" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            {/* Fixed top navbar and sidebar container */}
+            <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                zIndex: 100,
+                display: 'flex',
+                flexDirection: 'column'
+            }}>
+                {/* Navigation - now part of the fixed container */}
+                <nav className="sfs-navbar" role="navigation" aria-label="Main navigation" style={{
+                    width: '100%',
+                    backgroundColor: 'white',
+                    borderBottom: '1px solid #eee'
+                }}>
+                    <div className="sfs-navbar-content">
+                        <div className="sfs-navbar-brand">
+                            <img
+                                src="https://static1.squarespace.com/static/5ab98c1c5cfd7903fb57593c/t/5ac8de7a352f53a44fbbd872/1746198109953/"
+                                alt="Smiles for Speech logo: a smiley face"
+                                className="sfs-logo"
+                            />
+                            <Link to='/'><h1 className="sfs-title">Smiles for Speech</h1></Link>
+                        </div>
+                        <div className="sfs-navbar-links">
+                            <Link to="/" className="sfs-link">Home</Link>
+                            <Link to="/about" className="sfs-link">About Us</Link>
+                            <button onClick={handleLogout} className="sfs-login-btn" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Log Out</button>
+                        </div>
+                    </div>
+                </nav>
+            </div>
 
-            <div style={{ display: 'flex', position: 'relative' }}>
-                {/* Sidebar for Child Management */}
+            <div style={{ display: 'flex', marginTop: '60px' }}>
+                {/* Sidebar for Child Management - visually connected to navbar */}
                 <div style={{
                     width: '250px',
                     background: 'white',
                     boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
                     padding: '20px',
+                    paddingTop: '70px', // Increased padding at the top even more
                     position: 'fixed',
                     left: 0,
-                    top: '60px', // Navbar height
+                    top: '60px', // Directly below navbar
                     bottom: 0,
-                    overflowY: 'auto'
+                    overflowY: 'auto',
+                    borderTop: 'none', // Remove top border to connect with navbar
+                    zIndex: 90 // Lower than navbar but above main content
                 }}>
                     <div
                         style={{
                             display: 'flex',
                             alignItems: 'center',
-                            marginBottom: '20px',
+                            marginBottom: '40px', // Increased bottom margin further
                             cursor: 'pointer',
                             padding: '8px',
                             borderRadius: '4px',
@@ -391,6 +427,7 @@ function ProfilePage() {
                 <main className="sfs-hero" style={{
                     marginLeft: '250px',
                     width: 'calc(100% - 250px)',
+                    marginTop: '0', // Already accounted for with the parent div margin-top
                     minHeight: 'calc(100vh - 60px)',
                     alignItems: 'center',
                     padding: '20px'
@@ -402,7 +439,7 @@ function ProfilePage() {
 
                                 <div style={{ textAlign: 'center' }}>
                                     <img
-                                        src={`https://api.dicebear.com/6.x/avataaars/svg?seed=${selectedChild.name}`}
+                                        src={`data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAPFBMVEXk5ueutLepsLPo6uursbXJzc/p6+zj5ea2u76orrKvtbi0ubzZ3N3O0dPAxcfg4uPMz9HU19i8wcPDx8qKXtGiAAAFTElEQVR4nO2d3XqzIAyAhUD916L3f6+f1m7tVvtNINFg8x5tZ32fQAIoMcsEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQTghAJD1jWtnXJPP/54IgNzZQulSmxvTH6oYXX4WS+ivhTbqBa1r26cvCdCu6i0YXbdZ0o4A1rzV+5IcE3YE+z58T45lqo7g1Aa/JY5tgoqQF3qb382x7lNzBLcxft+O17QUYfQI4IIeklKsPSN4i6LKj/7Zm8n99RbHJpEw9gEBXNBpKIYLJqKYRwjOikf//r+J8ZsVuacbqCMNleI9TqGLGqMzhnVdBOdd6F/RlrFijiCoVMk320CBIahUxTWI0KKEcJqKbMdpdJb5QvdHq6wCI5qhKlgGMS/RBHkubWDAE+QZxB4xhCyDiDkLZxgGEVdQldzSKbTIhmZkFkSEPcVvmBn2SMuZB9od7fQDsMiDdKJjFUSCQarM5WirZ3C2TT/htYnyPcPfgrFHWz0BI74gr6J/IZiGUxAZGQLqmvQLTrtE/Go4YxhVRIpEw+sww1IIcqr5NKmUUzLF3d4/qPkYIp2T/obPuemlojFUR4t9Q2Vojhb7BmgElWHzLPH8hucfpefPNFTVgs9h1AdU/Pin96vwWbWdf+X9Absn3OdO34aMdsDnP8WgKYisTqI6CkNGqZQo1XA6Ef6AU32SJzOcBukHPF07/xNSgmHKa5BOhtezv6mA/rYJpwXNAnbRZ1XuF3BzDcO3vpA3+ny2909gbqE4hhD3LIPhLLyBNhPZvbZ3B+3tPYa18A7auSlXQayKwTPNLKDcuOB0xPYKDPFTkWsevQPRZ1J8Hji9I1KQ34r7hZhrwNwOZ97QxNx0drwn4QI0wQk1DcEsfKCWKdxVvxPSNUIp/knmAXT+nT+Ko3+0H96rcNb3m1fx7MBTJdeBJ7uFcWsc0wvgAsC4pROW0l2inbAmIBv/7GZmuhQH6API2rr8T0e6yuZJ+80A9LZeG62T3tik31XwxtwZcizKuTHkMjB1WdZde4Kmic/A5ZI3rr1ae21d08PlVHYfAaxw9G9CYRbJ+8ZdbTcMRV1XM3VdF0M32vtoTdZ0+u29s0OttJ5bz64UwinjaFMVY9vkqc3KKSxN21Xl+0L4Q3Vuv1tYl0pqnX6ms4XetFz7gdZVAgUEoJntfOUe4ZwsHd9FzqQ3Vv6xe41l0XJcqcKl6TZvlv7ClAW3BsqQW4X7ypApB8dmTgK4IX5wvqIVj33HtD2qSG4BqznxdIefL27Y4sahi0MdIdvUsDva8agGGbCtITmCY31MHD2O0uIdh/0rJDQ1VX5Zdxz3rR2QDbv6qXl9vudzqQtGm1Jv9LDXOsfvvB7VcZ8PDKD0mQ1VHPYQ9O+Yj4hR1IUD8rBnn3ho2m8oQMxbCFiKlL2ioSW5heeJqegED52CzxCtcGD3Kv8Wms9EYLyUhwaFIhSMBClevWEmiK/Iaogu4H7sg6ppQhQG8RUqivuTGOAJOg6FfgW0q0M0PQMRMEgXaeNf3SYDZ8PIMI0+wHgr/MgN7wYwpiLjCCqM6ydUDZLQiB6nDdNC8SDyig3jPPpFXGcC9O8BUBDVmgBY59E7Md/35Loe/UVEECEJwYggJjELZ4J71SaQSBeC02n4Da29CayJNA28SAhd2CQyC1Xw6pSmGSINQVuMhAZp4DClan9MgmkDDNmezqwS8sgtlXK/EPBhoaSmYVC/F7IO1jQEdHOlabpKh3+jzLQSTUiq4X2I+Ip/zU8rlaqAvkS21ElR+gqu3zbjjL+hIAiCIAiCIAiCIAiCsCf/AKrfVhSbvA+DAAAAAElFTkSuQmCC`}
                                         alt="Child Profile"
                                         className="sfs-photo"
                                         style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }}
@@ -557,6 +594,9 @@ function ProfilePage() {
                     height: 150px;
                     border-radius: 50%;
                     object-fit: cover;
+                }
+                .sfs-navbar {
+                    position: static;
                 }
             `}</style>
         </div>
