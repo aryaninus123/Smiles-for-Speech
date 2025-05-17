@@ -4,15 +4,14 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// Your web app's Firebase configuration
-// Replace these with your actual Firebase project config
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCrW-AerPPN7Yds-B_Bkeqzsge77hWWRgw",
+  authDomain: "smiles-for-speech-1b81d.firebaseapp.com",
+  projectId: "smiles-for-speech-1b81d",
+  storageBucket: "smiles-for-speech-1b81d.appspot.com",
+  messagingSenderId: "725020537485",
+  appId: "1:725020537485:web:aabbccddeeff"
 };
 
 // Initialize Firebase
