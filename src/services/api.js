@@ -11,6 +11,7 @@ const API_URL = 'http://localhost:5001/api';
 const fetchWithAuth = async (endpoint, options = {}) => {
   // Get token from localStorage if we implement auth later
   const token = localStorage.getItem('token');
+  console.log(`API Request to ${endpoint} - Token exists: ${!!token}`);
   
   const headers = {
     'Content-Type': 'application/json',
@@ -19,6 +20,8 @@ const fetchWithAuth = async (endpoint, options = {}) => {
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
+  } else {
+    console.warn(`Making request without auth token to: ${endpoint}`);
   }
 
   const config = {
@@ -26,10 +29,13 @@ const fetchWithAuth = async (endpoint, options = {}) => {
     headers,
   };
 
+  console.log(`Sending request to: ${API_URL}${endpoint}`);
   const response = await fetch(`${API_URL}${endpoint}`, config);
+  console.log(`Response status from ${endpoint}: ${response.status}`);
   
   if (!response.ok) {
     const error = await response.json();
+    console.error(`API error from ${endpoint}:`, error);
     
     // Check if this is an authentication error (401)
     if (response.status === 401) {
@@ -91,6 +97,35 @@ export const authAPI = {
       method: 'POST',
       body: JSON.stringify({ oobCode, newPassword }),
     });
+  },
+  
+  // Update user profile
+  updateProfile: async (profileData) => {
+    console.log('Sending profile update request with data:', profileData);
+    try {
+      const response = await fetch(`${API_URL}/users/profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(profileData)
+      });
+      
+      console.log('Profile update response status:', response.status);
+      
+      // If response is not ok, throw error
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Profile update failed with error:', errorData);
+        throw new Error(errorData.error || 'Failed to update profile');
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Profile update exception:', error);
+      throw error;
+    }
   }
 };
 

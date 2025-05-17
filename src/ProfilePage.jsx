@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
-import { authAPI } from './services/api';
+import { authAPI, uploadAPI } from './services/api';
+import { logout, getUser } from './utils/auth';
 
 function ProfilePage() {
     const history = useHistory();
@@ -30,18 +31,24 @@ function ProfilePage() {
     useEffect(() => {
         const fetchUserData = async () => {
             try {
+                // Check if user is logged in
                 const token = localStorage.getItem('token');
                 if (!token) {
                     history.push('/login');
                     return;
                 }
-
+                
+                // Get current user data
                 const userData = await authAPI.checkEmailVerification();
                 if (userData && userData.data) {
                     setUser(userData.data);
                     setName(userData.data.name || 'User');
                     setEmail(userData.data.email || '');
                     setEmailVerified(userData.data.emailVerified || false);
+                    
+                    // Update age and profile picture if available in the response
+                    if (userData.data.age) setAge(userData.data.age);
+                    if (userData.data.profilePicture) setProfilePic(userData.data.profilePicture);
                 }
 
                 if (childrenList.length > 0) {
@@ -53,7 +60,7 @@ function ProfilePage() {
             } catch (error) {
                 console.error('Error fetching user data:', error);
                 if (error.message.includes('Not authorized') || error.message.includes('token')) {
-                    localStorage.removeItem('token');
+                    logout();
                     history.push('/login');
                 }
             } finally {
@@ -101,16 +108,80 @@ function ProfilePage() {
         }
     };
 
-    const handleSave = (e) => {
+    const handleSave = async (e) => {
         e.preventDefault();
-        setName(editName);
-        setAge(editAge);
-        setProfilePic(editProfilePic);
-        setEditing(false);
+        setLoading(true);
+        
+        try {
+            console.log("Starting profile update...");
+            let profilePicUrl = profilePic;
+            
+            // Step 1: If a new profile picture was selected, upload it to Firebase Storage
+            if (editProfileFile) {
+                console.log("Uploading profile picture...");
+                try {
+                    const uploadResult = await uploadAPI.uploadFile(editProfileFile, 'profile');
+                    console.log("Upload result:", uploadResult);
+                    if (uploadResult && uploadResult.data && uploadResult.data.url) {
+                        // Get the URL from the upload result
+                        profilePicUrl = uploadResult.data.url;
+                        console.log("Profile picture URL:", profilePicUrl);
+                    }
+                } catch (uploadError) {
+                    console.error("Error uploading profile picture:", uploadError);
+                    throw new Error(`Failed to upload image: ${uploadError.message}`);
+                }
+            }
+            
+            // Step 2: Update user profile in Firestore with the new data
+            const profileData = {
+                name: editName || 'User',
+                age: editAge.toString() || '25',  // Convert to string and provide default
+                profilePicture: profilePicUrl || '',
+                email: email || user?.email || ''
+            };
+            
+            console.log("Sending profile data to server:", profileData);
+            
+            // Call the API to update the user profile
+            try {
+                const result = await authAPI.updateProfile(profileData);
+                console.log("Profile update result:", result);
+                
+                // If successful, update the local cache
+                if (result && result.data) {
+                    // Update the user in localStorage
+                    const updatedUser = {
+                        ...user,
+                        ...profileData
+                    };
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                }
+            } catch (updateError) {
+                console.error("Error updating profile data:", updateError);
+                throw new Error(`Failed to update profile data: ${updateError.message}`);
+            }
+            
+            // Update local state with the new values
+            setName(editName);
+            setAge(editAge);
+            setProfilePic(profilePicUrl);
+            
+            // Exit edit mode
+            setEditing(false);
+            
+            // Show success message
+            alert('Profile updated successfully!');
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            alert(`Failed to update profile: ${error.message}`);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
+        logout();
         history.push('/login');
     };
 
