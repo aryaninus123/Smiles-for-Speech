@@ -126,24 +126,6 @@ function ProfilePage() {
 
     return (
         <div className="sfs-root">
-            {/* Navigation */}
-            <nav className="sfs-navbar" role="navigation" aria-label="Main navigation">
-                <div className="sfs-navbar-content">
-                    <div className="sfs-navbar-brand">
-                        <img
-                            src="https://static1.squarespace.com/static/5ab98c1c5cfd7903fb57593c/t/5ac8de7a352f53a44fbbd872/1746198109953/"
-                            alt="Smiles for Speech logo: a smiley face"
-                            className="sfs-logo"
-                        />
-                        <Link to='/'><h1 className="sfs-title">Smiles for Speech</h1></Link>
-                    </div>
-                    <div className="sfs-navbar-links">
-                        <Link to="/" className="sfs-link">Home</Link>
-                        <Link to="/about" className="sfs-link">About Us</Link>
-                        <button onClick={handleLogout} className="sfs-login-btn" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Log Out</button>
-                    </div>
-                </div>
-            </nav>
 
             {/* Profile Section */}
             <main className="sfs-hero" style={{ alignItems: 'center' }}>
