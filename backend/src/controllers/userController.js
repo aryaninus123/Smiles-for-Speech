@@ -48,7 +48,7 @@ const getCurrentUser = async (req, res) => {
  */
 const updateUserProfile = async (req, res) => {
   try {
-    const { name, phone, address, role } = req.body;
+    const { name, phone, address, role, age, profilePicture } = req.body;
     
     // Check if user already exists
     const userSnapshot = await usersCollection
@@ -64,6 +64,8 @@ const updateUserProfile = async (req, res) => {
         name: name || '',
         phone: phone || '',
         address: address || '',
+        age: age || 'N/A',
+        profilePicture: profilePicture || '',
         role: role || 'parent',
         createdAt: new Date().toISOString()
       };
@@ -81,6 +83,8 @@ const updateUserProfile = async (req, res) => {
         name: name || userSnapshot.docs[0].data().name,
         phone: phone || userSnapshot.docs[0].data().phone,
         address: address || userSnapshot.docs[0].data().address,
+        age: age || userSnapshot.docs[0].data().age || 'N/A',
+        profilePicture: profilePicture || userSnapshot.docs[0].data().profilePicture || '',
         updatedAt: new Date().toISOString()
       };
       
