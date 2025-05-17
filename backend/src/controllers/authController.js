@@ -155,12 +155,95 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Check if user exists in Auth
+    // Verify credentials using Firebase Auth SDK directly
+    try {
+      // Since we're in Node.js and using firebase-admin, we need to validate the password
+      // Firebase Admin doesn't have a direct signInWithEmailAndPassword method, 
+      // so we'll do this by attempting to authenticate with the Auth REST API
+      
+      // Import the necessary modules
+      const https = require('https');
+      
+      // Create a basic credential verification function
+      const verifyPassword = (email, password) => {
+        return new Promise((resolve, reject) => {
+          // Get the API key directly from environment variables
+          const apiKey = process.env.FIREBASE_API_KEY;
+          
+          if (!apiKey) {
+            console.error('Firebase API key is missing from environment variables');
+            reject(new Error('Server configuration error'));
+            return;
+          }
+          
+          // Create the request options
+          const options = {
+            hostname: 'identitytoolkit.googleapis.com',
+            path: `/v1/accounts:signInWithPassword?key=${apiKey}`,
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          };
+          
+          // Create the request body
+          const data = JSON.stringify({
+            email,
+            password,
+            returnSecureToken: true
+          });
+          
+          // Send the request
+          const req = https.request(options, (res) => {
+            let responseData = '';
+            
+            res.on('data', (chunk) => {
+              responseData += chunk;
+            });
+            
+            res.on('end', () => {
+              try {
+                const parsed = JSON.parse(responseData);
+                if (parsed.error) {
+                  reject(new Error(parsed.error.message || 'Invalid credentials'));
+                } else {
+                  resolve(parsed);
+                }
+              } catch (e) {
+                reject(e);
+              }
+            });
+          });
+          
+          req.on('error', (e) => {
+            reject(e);
+          });
+          
+          req.write(data);
+          req.end();
+        });
+      };
+      
+      // Attempt to verify the password
+      await verifyPassword(email, password);
+      console.log('Password verification successful');
+    } catch (error) {
+      console.error('Password verification failed:', error.message);
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid credentials'
+      });
+    }
+    
+    // If we got here, the password is correct
+    // Now continue with the user lookup and token generation
+    
+    // Find user in Auth
     let authUser;
     try {
       authUser = await auth.getUserByEmail(email);
     } catch (error) {
-      console.error('Error logging in:', error);
+      console.error('Error getting user by email:', error);
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials'
@@ -213,8 +296,7 @@ const loginUser = async (req, res) => {
     
     const userData = userSnapshot.docs[0].data();
     
-    // For demo purposes, we'll trust the email and simply create a token
-    // In a real app, you'd verify the password properly
+    // Create a token after password verification
     const token = await createToken(userData.uid);
     
     // Get the latest email verification status from Firebase Auth
