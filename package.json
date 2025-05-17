@@ -15,11 +15,13 @@
     "autoprefixer": "^10.3.7",
     "babel-loader": "^8.2.3",
     "css-loader": "^6.5.1",
+    "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.5.0",
     "postcss": "^8.3.9",
     "postcss-loader": "^6.2.1",
     "style-loader": "^3.3.1",
     "tailwindcss": "^2.2.19",
+    "url-loader": "^4.1.1",
     "webpack": "^5.64.4",
     "webpack-cli": "^4.9.1",
     "webpack-dev-server": "^4.6.0"

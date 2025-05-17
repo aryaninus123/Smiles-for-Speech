@@ -5,7 +5,7 @@
 /* Custom styles for Smiles for Speech landing page */
 
 .sfs-root {
-    min-height: 100vh;
+    /* min-height: 100vh; */
     background: #fff;
     display: flex;
     flex-direction: column;
