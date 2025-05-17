@@ -1,0 +1,81 @@
+.sfs-navbar {
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 1rem 0;
+    width: 100%;
+}
+
+.sfs-navbar-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1rem;
+}
+
+.sfs-navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sfs-logo {
+    /* width: 40px; */
+    /* height: 40px; */
+    object-fit: contain;
+    aspect-ratio: 1/1;
+}
+
+.sfs-title {
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    text-decoration: none;
+}
+
+.sfs-navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.sfs-link {
+    color: #666;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.sfs-link:hover {
+    color: #f9c32b;
+}
+
+.sfs-login-btn {
+    background: #f9c32b;
+    color: #333;
+    padding: 0.5rem 1.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.sfs-login-btn:hover {
+    background: #ffd15b;
+}
+
+@media (max-width: 768px) {
+    .sfs-navbar-content {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    .sfs-navbar-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+    }
+} 

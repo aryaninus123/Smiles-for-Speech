@@ -108,7 +108,7 @@ function ResultsSummary({ answers }) {
             </div>
 
             {/* Navigation Tabs */}
-            <div style={{ marginBottom: '2rem' }}>
+            <div style={{ marginBottom: '0rem' }}>
                 <TabButton id="summary" label="Detailed Results" active={activeTab === 'summary'} />
                 <TabButton id="nextSteps" label="Next Steps" active={activeTab === 'nextSteps'} />
             </div>
