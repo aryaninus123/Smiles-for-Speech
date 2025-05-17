@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="e4037d57-4fa8-4b5d-8950-4884679c82cf" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/Smiles-for-Speech.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dist/bundle.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dist/bundle.js.LICENSE.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dist/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ai/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ai/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ai/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ai/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/bi/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/bi/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/bi/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/bi/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/bs/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/bs/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/bs/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/bs/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/cg/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/cg/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/cg/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/cg/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ci/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ci/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ci/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ci/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/di/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/di/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/di/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/di/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fa/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fa/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fa/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fa/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fa6/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fa6/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fa6/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fa6/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fc/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fc/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fc/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fc/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fi/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fi/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fi/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/fi/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/gi/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/gi/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/gi/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/gi/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/go/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/go/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/go/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/go/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/gr/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/gr/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/gr/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/gr/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/hi/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/hi/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/hi/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/hi/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/hi2/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/hi2/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/hi2/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/hi2/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/im/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/im/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/im/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/im/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/io/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/io/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/io/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/io/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/io5/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/io5/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/io5/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/io5/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lia/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lia/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lia/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lia/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lib/iconBase.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lib/iconBase.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lib/iconBase.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lib/iconContext.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lib/iconContext.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lib/iconContext.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lib/iconsManifest.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lib/iconsManifest.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lib/iconsManifest.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lib/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lib/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lib/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lib/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lu/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lu/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lu/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/lu/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/md/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/md/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/md/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/md/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/pi/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/pi/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/pi/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/pi/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ri/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ri/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ri/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ri/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/rx/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/rx/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/rx/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/rx/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/si/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/si/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/si/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/si/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/sl/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/sl/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/sl/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/sl/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/tb/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/tb/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/tb/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/tb/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/tfi/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/tfi/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/tfi/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/tfi/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ti/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ti/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ti/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/ti/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/vsc/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/vsc/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/vsc/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/vsc/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/wi/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/wi/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/wi/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/node_modules/react-icons/wi/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/asset/fakeProfile.png" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 8
+}]]></component>
+  <component name="ProjectId" id="2xCvvYpj4Ce5we4HUWQUL2zXTGi" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/Users/tammy/Documents/GitHub/Hack2Impact/Smiles-for-Speech/src/asset",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "npm.build.executor": "Run",
+    "ts.external.directory.path": "/Applications/WebStorm.app/Contents/plugins/javascript-impl/jsLanguageServicesImpl/external",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/asset" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="build" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="build" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="npm.build" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-1d06a55b98c1-74d2a5396914-JavaScript-WS-241.14494.235" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e4037d57-4fa8-4b5d-8950-4884679c82cf" name="Changes" comment="" />
+      <created>1747455101348</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1747455101348</updated>
+      <workItem from="1747455103314" duration="11696000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+  </component>
+</project>
