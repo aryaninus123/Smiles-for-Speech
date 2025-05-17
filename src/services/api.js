@@ -30,6 +30,17 @@ const fetchWithAuth = async (endpoint, options = {}) => {
   
   if (!response.ok) {
     const error = await response.json();
+    
+    // Check if this is an authentication error (401)
+    if (response.status === 401) {
+      // For login endpoint specifically, show "Wrong password"
+      if (endpoint === '/auth/login') {
+        throw new Error('Wrong password');
+      } else {
+        throw new Error(error.message || 'Authentication failed');
+      }
+    }
+    
     throw new Error(error.message || 'Something went wrong');
   }
   
