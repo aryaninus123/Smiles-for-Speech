@@ -1,13 +1,9 @@
+// Load environment variables first, before any other imports
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const dotenv = require('dotenv');
-
-// Load environment variables
-dotenv.config();
-
-// Import Firebase config (initializes Firebase Admin)
-require('./config/firebase');
 
 // Initialize app
 const app = express();
@@ -16,6 +12,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
+
+// Import Firebase config (initializes Firebase Admin)
+require('./config/firebase');
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
