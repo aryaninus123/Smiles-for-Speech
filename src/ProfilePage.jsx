@@ -27,6 +27,11 @@ function ProfilePage() {
     const [sidebarError, setSidebarError] = useState('');
     const [sidebarSuccess, setSidebarSuccess] = useState('');
     const [selectedChild, setSelectedChild] = useState(null);
+    const [editingChild, setEditingChild] = useState(null);
+    const [editChildName, setEditChildName] = useState('');
+    const [editChildAge, setEditChildAge] = useState('');
+    const [editChildPic, setEditChildPic] = useState('');
+    const [editChildPicFile, setEditChildPicFile] = useState(null);
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -56,6 +61,7 @@ function ProfilePage() {
                     setSelectedChild(firstChild);
                     const hasTest = firstChild.testResults && firstChild.testResults.length > 0;
                     setTestResult(hasTest ? "Test results found" : "No test result available.");
+    
                 }
             } catch (error) {
                 console.error('Error fetching user data:', error);
@@ -94,6 +100,7 @@ function ProfilePage() {
         setEditProfilePic(profilePic);
         setEditProfileFile(null);
         setEditing(true);
+        setEditingChild(null);
     };
 
     const handleProfilePicChange = (e) => {
@@ -222,6 +229,86 @@ function ProfilePage() {
         setSelectedChild(null);
         setTestResult('No test result available.');
         setSummary('No summary available.');
+    };
+
+    const handleEditChild = (child) => {
+        setEditChildName(child.name);
+        setEditChildAge(child.age);
+        setEditChildPic(child.photoUrl || `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAPFBMVEXk5ueutLepsLPo6uursbXJzc/p6+zj5ea2u76orrKvtbi0ubzZ3N3O0dPAxcfg4uPMz9HU19i8wcPDx8qKXtGiAAAFTElEQVR4nO2d3XqzIAyAhUD916L3f6+f1m7tVvtNINFg8x5tZ32fQAIoMcsEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQTghAJD1jWtnXJPP/54IgNzZQulSmxvTH6oYXX4WS+ivhTbqBa1r26cvCdCu6i0YXbdZ0o4A1rzV+5IcE3YE+z58T45lqo7g1Aa/JY5tgoqQF3qb382x7lNzBLcxft+O17QUYfQI4IIeklKsPSN4i6LKj/7Zm8n99RbHJpEw9gEBXNBpKIYLJqKYRwjOikf//r+J8ZsVuacbqCMNleI9TqGLGqMzhnVdBOdd6F/RlrFijiCoVMk320CBIahUxTWI0KKEcJqKbMdpdJb5QvdHq6wCI5qhKlgGMS/RBHkubWDAE+QZxB4xhCyDiDkLZxgGEVdQldzSKbTIhmZkFkSEPcVvmBn2SMuZB9od7fQDsMiDdKJjFUSCQarM5WirZ3C2TT/htYnyPcPfgrFHWz0BI74gr6J/IZiGUxAZGQLqmvQLTrtE/Go4YxhVRIpEw+sww1IIcqr5NKmUUzLF3d4/qPkYIp2T/obPuemlojFUR4t9Q2Vojhb7BmgElWHzLPH8hucfpefPNFTVgs9h1AdU/Pin96vwWbWdf+X9Absn3OdO34aMdsDnP8WgKYisTqI6CkNGqZQo1XA6Ef6AU32SJzOcBukHPF07/xNSgmHKa5BOhtezv6mA/rYJpwXNAnbRZ1XuF3BzDcO3vpA3+ny2909gbqE4hhD3LIPhLLyBNhPZvbZ3B+3tPYa18A7auSlXQayKwTPNLKDcuOB0xPYKDPFTkWsevQPRZ1J8Hji9I1KQ34r7hZhrwNwOZ97QxNx0drwn4QI0wQk1DcEsfKCWKdxVvxPSNUIp/knmAXT+nT+Ko3+0H96rcNb3m1fx7MBTJdeBJ7uFcWsc0wvgAsC4pROW0l2inbAmIBv/7GZmuhQH6API2rr8T0e6yuZJ+80A9LZeG62T3tik31XwxtwZcizKuTHkMjB1WdZde4Kmic/A5ZI3rr1ae21d08PlVHYfAaxw9G9CYRbJ+8ZdbTcMRV1XM3VdF0M32vtoTdZ0+u29s0OttJ5bz64UwinjaFMVY9vkqc3KKSxN21Xl+0L4Q3Vuv1tYl0pqnX6ms4XetFz7gdZVAgUEoJntfOUe4ZwsHd9FzqQ3Vv6xe41l0XJcqcKl6TZvlv7ClAW3BsqQW4X7ypApB8dmTgK4IX5wvqIVj33HtD2qSG4BqznxdIefL27Y4sahi0MdIdvUsDva8agGGbCtITmCY31MHD2O0uIdh/0rJDQ1VX5Zdxz3rR2QDbv6qXl9vudzqQtGm1Jv9LDXOsfvvB7VcZ8PDKD0mQ1VHPYQ9O+Yj4hR1IUD8rBnn3ho2m8oQMxbCFiKlL2ioSW5heeJqegED52CzxCtcGD3Kv8Wms9EYLyUhwaFIhSMBClevWEmiK/Iaogu4H7sg6ppQhQG8RUqivuTGOAJOg6FfgW0q0M0PQMRMEgXaeNf3SYDZ8PIMI0+wHgr/MgN7wYwpiLjCCqM6ydUDZLQiB6nDdNC8SDyig3jPPpFXGcC9O8BUBDVmgBY59E7Md/35Loe/UVEECEJwYggJjELZ4J71SaQSBeC02n4Da29CayJNA28SAhd2CQyC1Xw6pSmGSINQVuMhAZp4DClan9MgmkDDNmezqwS8sgtlXK/EPBhoaSmYVC/F7IO1jQEdHOlabpKh3+jzLQSTUiq4X2I+Ip/zU8rlaqAvkS21ElR+gqu3zbjjL+hIAiCIAiCIAiCIAiCsCf/AKrfVhSbvA+DAAAAAElFTkSuQmCC`);
+        setEditChildPicFile(null);
+        setEditingChild(child);
+        setEditing(false);
+    };
+
+    const handleChildPicChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setEditChildPic(reader.result);
+                setEditChildPicFile(file);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSaveChild = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            let childPicUrl = editChildPic;
+
+            // Upload new profile picture if one was selected
+            if (editChildPicFile) {
+                try {
+                    const uploadResult = await uploadAPI.uploadFile(editChildPicFile, 'childProfile');
+                    if (uploadResult && uploadResult.data && uploadResult.data.url) {
+                        childPicUrl = uploadResult.data.url;
+                    }
+                } catch (uploadError) {
+                    console.error("Error uploading child's picture:", uploadError);
+                }
+            }
+
+            // Update child data
+            const updatedChild = {
+                ...editingChild,
+                name: editChildName,
+                age: editChildAge,
+                photoUrl: childPicUrl
+            };
+
+            // Update children list
+            setChildrenList(prevList =>
+                prevList.map(child =>
+                    child.id === editingChild.id ? updatedChild : child
+                )
+            );
+
+            // Update selected child if this was the one being edited
+            if (selectedChild && selectedChild.id === editingChild.id) {
+                setSelectedChild(updatedChild);
+            }
+
+            setEditingChild(null);
+            setSidebarSuccess('Child profile updated successfully!');
+            setTimeout(() => {
+                setSidebarSuccess('');
+            }, 3000);
+        } catch (error) {
+            console.error('Error updating child profile:', error);
+            setSidebarError('Failed to update child profile. Please try again.');
+            setTimeout(() => {
+                setSidebarError('');
+            }, 3000);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCancelChildEdit = () => {
+        setEditingChild(null);
     };
 
     if (loading) {
@@ -415,7 +502,7 @@ function ProfilePage() {
                                         onClick={() => handleSelectChild(child)}
                                     >
                                         <div style={{ fontWeight: '600' }}>{child.name}</div>
-                                        <div style={{ color: '#666' }}>Age: {child.age}</div>
+                                        <div style={{ color: '#666' }}>Age: {child.age}</div>                                
                                     </div>
                                 ))}
                             </div>
@@ -435,18 +522,142 @@ function ProfilePage() {
                     <section style={{ maxWidth: '28rem', width: '100%', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '2rem', margin: '0 auto' }}>
                         {selectedChild ? (
                             <>
-                                <h2 className="sfs-hero-title" style={{ fontSize: '2rem', marginBottom: '1.5rem' }}>{selectedChild.name}'s Profile</h2>
+                                {editingChild && editingChild.id === selectedChild.id ? (
+                                    <form onSubmit={handleSaveChild} style={{ textAlign: 'center' }}>
+                                        <h2 className="sfs-hero-title" style={{ fontSize: '2rem', marginBottom: '1.5rem' }}>Edit {editChildName}'s Profile</h2>
+                                        
+                                        <img 
+                                            src={editChildPic} 
+                                            alt="Child Profile preview" 
+                                            className="sfs-photo" 
+                                            style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }} 
+                                        />
+                                        
+                                        <div style={{ marginBottom: '1rem' }}>
+                                            <label htmlFor="childProfilePic" style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#111' }}>Profile Picture</label>
+                                            <input
+                                                type="file"
+                                                id="childProfilePic"
+                                                accept="image/*"
+                                                className="sfs-login-input"
+                                                style={{ width: '100%', marginBottom: '0.5rem' }}
+                                                onChange={handleChildPicChange}
+                                            />
+                                        </div>
 
-                                <div style={{ textAlign: 'center' }}>
-                                    <img
-                                        src={`data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAPFBMVEXk5ueutLepsLPo6uursbXJzc/p6+zj5ea2u76orrKvtbi0ubzZ3N3O0dPAxcfg4uPMz9HU19i8wcPDx8qKXtGiAAAFTElEQVR4nO2d3XqzIAyAhUD916L3f6+f1m7tVvtNINFg8x5tZ32fQAIoMcsEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQTghAJD1jWtnXJPP/54IgNzZQulSmxvTH6oYXX4WS+ivhTbqBa1r26cvCdCu6i0YXbdZ0o4A1rzV+5IcE3YE+z58T45lqo7g1Aa/JY5tgoqQF3qb382x7lNzBLcxft+O17QUYfQI4IIeklKsPSN4i6LKj/7Zm8n99RbHJpEw9gEBXNBpKIYLJqKYRwjOikf//r+J8ZsVuacbqCMNleI9TqGLGqMzhnVdBOdd6F/RlrFijiCoVMk320CBIahUxTWI0KKEcJqKbMdpdJb5QvdHq6wCI5qhKlgGMS/RBHkubWDAE+QZxB4xhCyDiDkLZxgGEVdQldzSKbTIhmZkFkSEPcVvmBn2SMuZB9od7fQDsMiDdKJjFUSCQarM5WirZ3C2TT/htYnyPcPfgrFHWz0BI74gr6J/IZiGUxAZGQLqmvQLTrtE/Go4YxhVRIpEw+sww1IIcqr5NKmUUzLF3d4/qPkYIp2T/obPuemlojFUR4t9Q2Vojhb7BmgElWHzLPH8hucfpefPNFTVgs9h1AdU/Pin96vwWbWdf+X9Absn3OdO34aMdsDnP8WgKYisTqI6CkNGqZQo1XA6Ef6AU32SJzOcBukHPF07/xNSgmHKa5BOhtezv6mA/rYJpwXNAnbRZ1XuF3BzDcO3vpA3+ny2909gbqE4hhD3LIPhLLyBNhPZvbZ3B+3tPYa18A7auSlXQayKwTPNLKDcuOB0xPYKDPFTkWsevQPRZ1J8Hji9I1KQ34r7hZhrwNwOZ97QxNx0drwn4QI0wQk1DcEsfKCWKdxVvxPSNUIp/knmAXT+nT+Ko3+0H96rcNb3m1fx7MBTJdeBJ7uFcWsc0wvgAsC4pROW0l2inbAmIBv/7GZmuhQH6API2rr8T0e6yuZJ+80A9LZeG62T3tik31XwxtwZcizKuTHkMjB1WdZde4Kmic/A5ZI3rr1ae21d08PlVHYfAaxw9G9CYRbJ+8ZdbTcMRV1XM3VdF0M32vtoTdZ0+u29s0OttJ5bz64UwinjaFMVY9vkqc3KKSxN21Xl+0L4Q3Vuv1tYl0pqnX6ms4XetFz7gdZVAgUEoJntfOUe4ZwsHd9FzqQ3Vv6xe41l0XJcqcKl6TZvlv7ClAW3BsqQW4X7ypApB8dmTgK4IX5wvqIVj33HtD2qSG4BqznxdIefL27Y4sahi0MdIdvUsDva8agGGbCtITmCY31MHD2O0uIdh/0rJDQ1VX5Zdxz3rR2QDbv6qXl9vudzqQtGm1Jv9LDXOsfvvB7VcZ8PDKD0mQ1VHPYQ9O+Yj4hR1IUD8rBnn3ho2m8oQMxbCFiKlL2ioSW5heeJqegED52CzxCtcGD3Kv8Wms9EYLyUhwaFIhSMBClevWEmiK/Iaogu4H7sg6ppQhQG8RUqivuTGOAJOg6FfgW0q0M0PQMRMEgXaeNf3SYDZ8PIMI0+wHgr/MgN7wYwpiLjCCqM6ydUDZLQiB6nDdNC8SDyig3jPPpFXGcC9O8BUBDVmgBY59E7Md/35Loe/UVEECEJwYggJjELZ4J71SaQSBeC02n4Da29CayJNA28SAhd2CQyC1Xw6pSmGSINQVuMhAZp4DClan9MgmkDDNmezqwS8sgtlXK/EPBhoaSmYVC/F7IO1jQEdHOlabpKh3+jzLQSTUiq4X2I+Ip/zU8rlaqAvkS21ElR+gqu3zbjjL+hIAiCIAiCIAiCIAiCsCf/AKrfVhSbvA+DAAAAAElFTkSuQmCC`}
-                                        alt="Child Profile"
-                                        className="sfs-photo"
-                                        style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }}
-                                    />
-                                    <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#111', marginBottom: '0.5rem' }}>{selectedChild.name}</div>
-                                    <div style={{ fontSize: '1.1rem', color: '#555', marginBottom: '1.5rem' }}>Age: {selectedChild.age}</div>
-                                </div>
+                                        <div style={{ marginBottom: '1rem' }}>
+                                            <label htmlFor="editChildName" style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#111' }}>Name</label>
+                                            <input
+                                                type="text"
+                                                id="editChildName"
+                                                className="sfs-login-input"
+                                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #ccc', fontSize: '1rem' }}
+                                                value={editChildName}
+                                                onChange={e => setEditChildName(e.target.value)}
+                                                required
+                                            />
+                                        </div>
+
+                                        <div style={{ marginBottom: '1.5rem' }}>
+                                            <label htmlFor="editChildAge" style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#111' }}>Age</label>
+                                            <input
+                                                type="number"
+                                                id="editChildAge"
+                                                className="sfs-login-input"
+                                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #ccc', fontSize: '1rem' }}
+                                                value={editChildAge}
+                                                onChange={e => setEditChildAge(e.target.value)}
+                                                min="1"
+                                                max="18"
+                                                required
+                                            />
+                                        </div>
+
+                                        <button type="submit" className="sfs-get-started-btn" style={{ marginRight: '1rem' }}>Save Changes</button>
+                                        <button 
+                                            type="button" 
+                                            className="sfs-link" 
+                                            style={{ 
+                                                background: 'none', 
+                                                border: 'none', 
+                                                color: '#f9c32b', 
+                                                fontWeight: 700, 
+                                                fontSize: '1rem', 
+                                                cursor: 'pointer' 
+                                            }} 
+                                            onClick={handleCancelChildEdit}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </form>
+                                ) : (
+                                    <>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                            <h2 className="sfs-hero-title" style={{ fontSize: '2rem', margin: 0 }}>{selectedChild.name}'s Profile</h2>
+                                            <button
+                                                onClick={() => handleEditChild(selectedChild)}
+                                                className="sfs-link"
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    color: '#f9c32b',
+                                                    fontWeight: 700,
+                                                    fontSize: '1rem',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                Edit Profile
+                                            </button>
+                                        </div>
+
+                                        <div style={{ textAlign: 'center' }}>
+                                            <img
+                                                src={selectedChild.photoUrl || `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAPFBMVEXk5ueutLepsLPo6uursbXJzc/p6+zj5ea2u76orrKvtbi0ubzZ3N3O0dPAxcfg4uPMz9HU19i8wcPDx8qKXtGiAAAFTElEQVR4nO2d3XqzIAyAhUD916L3f6+f1m7tVvtNINFg8x5tZ32fQAIoMcsEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQTghAJD1jWtnXJPP/54IgNzZQulSmxvTH6oYXX4WS+ivhTbqBa1r26cvCdCu6i0YXbdZ0o4A1rzV+5IcE3YE+z58T45lqo7g1Aa/JY5tgoqQF3qb382x7lNzBLcxft+O17QUYfQI4IIeklKsPSN4i6LKj/7Zm8n99RbHJpEw9gEBXNBpKIYLJqKYRwjOikf//r+J8ZsVuacbqCMNleI9TqGLGqMzhnVdBOdd6F/RlrFijiCoVMk320CBIahUxTWI0KKEcJqKbMdpdJb5QvdHq6wCI5qhKlgGMS/RBHkubWDAE+QZxB4xhCyDiDkLZxgGEVdQldzSKbTIhmZkFkSEPcVvmBn2SMuZB9od7fQDsMiDdKJjFUSCQarM5WirZ3C2TT/htYnyPcPfgrFHWz0BI74gr6J/IZiGUxAZGQLqmvQLTrtE/Go4YxhVRIpEw+sww1IIcqr5NKmUUzLF3d4/qPkYIp2T/obPuemlojFUR4t9Q2Vojhb7BmgElWHzLPH8hucfpefPNFTVgs9h1AdU/Pin96vwWbWdf+X9Absn3OdO34aMdsDnP8WgKYisTqI6CkNGqZQo1XA6Ef6AU32SJzOcBukHPF07/xNSgmHKa5BOhtezv6mA/rYJpwXNAnbRZ1XuF3BzDcO3vpA3+ny2909gbqE4hhD3LIPhLLyBNhPZvbZ3B+3tPYa18A7auSlXQayKwTPNLKDcuOB0xPYKDPFTkWsevQPRZ1J8Hji9I1KQ34r7hZhrwNwOZ97QxNx0drwn4QI0wQk1DcEsfKCWKdxVvxPSNUIp/knmAXT+nT+Ko3+0H96rcNb3m1fx7MBTJdeBJ7uFcWsc0wvgAsC4pROW0l2inbAmIBv/7GZmuhQH6API2rr8T0e6yuZJ+80A9LZeG62T3tik31XwxtwZcizKuTHkMjB1WdZde4Kmic/A5ZI3rr1ae21d08PlVHYfAaxw9G9CYRbJ+8ZdbTcMRV1XM3VdF0M32vtoTdZ0+u29s0OttJ5bz64UwinjaFMVY9vkqc3KKSxN21Xl+0L4Q3Vuv1tYl0pqnX6ms4XetFz7gdZVAgUEoJntfOUe4ZwsHd9FzqQ3Vv6xe41l0XJcqcKl6TZvlv7ClAW3BsqQW4X7ypApB8dmTgK4IX5wvqIVj33HtD2qSG4BqznxdIefL27Y4sahi0MdIdvUsDva8agGGbCtITmCY31MHD2O0uIdh/0rJDQ1VX5Zdxz3rR2QDbv6qXl9vudzqQtGm1Jv9LDXOsfvvB7VcZ8PDKD0mQ1VHPYQ9O+Yj4hR1IUD8rBnn3ho2m8oQMxbCFiKlL2ioSW5heeJqegED52CzxCtcGD3Kv8Wms9EYLyUhwaFIhSMBClevWEmiK/Iaogu4H7sg6ppQhQG8RUqivuTGOAJOg6FfgW0q0M0PQMRMEgXaeNf3SYDZ8PIMI0+wHgr/MgN7wYwpiLjCCqM6ydUDZLQiB6nDdNC8SDyig3jPPpFXGcC9O8BUBDVmgBY59E7Md/35Loe/UVEECEJwYggJjELZ4J71SaQSBeC02n4Da29CayJNA28SAhd2CQyC1Xw6pSmGSINQVuMhAZp4DClan9MgmkDDNmezqwS8sgtlXK/EPBhoaSmYVC/F7IO1jQEdHOlabpKh3+jzLQSTUiq4X2I+Ip/zU8rlaqAvkS21ElR+gqu3zbjjL+hIAiCIAiCIAiCIAiCsCf/AKrfVhSbvA+DAAAAAElFTkSuQmCC`}
+                                                alt="Child Profile"
+                                                className="sfs-photo"
+                                                style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }}
+                                            />
+                                            <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#111', marginBottom: '0.5rem' }}>{selectedChild.name}</div>
+                                            <div style={{ fontSize: '1.1rem', color: '#555', marginBottom: '1.5rem' }}>Age: {selectedChild.age}</div>
+                                        </div>
+
+                                        {/* Test Result Section */}
+                                        <section style={{ marginTop: '2.5rem', marginBottom: '1.5rem' }}>
+                                            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Test Result</h3>
+                                            <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{testResult}</div>
+
+                                            {/* Assessment Button */}
+                                            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                                                <Link to="/assessment" style={{ textDecoration: 'none' }}>
+                                                    <button
+                                                        style={{
+                                                            background: '#f9c32b',
+                                                            color: 'white',
+                                                            border: 'none',
+                                                            borderRadius: '0.5rem',
+                                                            padding: '0.75rem 1.5rem',
+                                                            fontSize: '1rem',
+                                                            fontWeight: '600',
+                                                            cursor: 'pointer',
+                                                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                                            transition: 'all 0.2s ease'
+                                                        }}
+                                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e8b52a'}
+                                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f9c32b'}
+                                                    >
+                                                        Take Assessment!
+                                                    </button>
+                                                </Link>
+                                            </div>
+                                        </section>
+
+                                        {/* Summary Section */}
+                                        <section style={{ marginBottom: '0.5rem' }}>
+                                            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Summary</h3>
+                                            <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{summary}</div>
+                                        </section>
+                                    </>
+                                )}
                             </>
                         ) : (
                             <>
@@ -494,7 +705,7 @@ function ProfilePage() {
                                         <img src={profilePic} alt="Profile" className="sfs-photo" style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }} />
                                         <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#111', marginBottom: '0.5rem' }}>{name}</div>
                                         <div style={{ fontSize: '1.1rem', color: '#555', marginBottom: '1.5rem' }}>Age: {age}</div>
-                                        <button className="sfs-get-started-btn" style={{ marginBottom: '2rem' }} onClick={handleEdit}>Edit Profile</button>
+                                        <button className="sfs-get-started-btn" style={{ marginBottom: '0rem' }} onClick={handleEdit}>Edit Profile</button>
                                     </div>
                                 ) : (
                                     <form onSubmit={handleSave} style={{ textAlign: 'center' }}>
@@ -544,42 +755,6 @@ function ProfilePage() {
                                 )}
                             </>
                         )}
-
-                        {/* Test Result Section */}
-                        <section style={{ marginTop: '2.5rem', marginBottom: '1.5rem' }}>
-                            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Test Result</h3>
-                            <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{testResult}</div>
-
-                            {/* Assessment Button */}
-                            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                                <Link to="/assessment" style={{ textDecoration: 'none' }}>
-                                    <button
-                                        style={{
-                                            background: '#f9c32b',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '0.5rem',
-                                            padding: '0.75rem 1.5rem',
-                                            fontSize: '1rem',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                            transition: 'all 0.2s ease'
-                                        }}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e8b52a'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f9c32b'}
-                                    >
-                                        Take Assessment!
-                                    </button>
-                                </Link>
-                            </div>
-                        </section>
-
-                        {/* Summary Section */}
-                        <section style={{ marginBottom: '0.5rem' }}>
-                            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Summary</h3>
-                            <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{summary}</div>
-                        </section>
                     </section>
                 </main>
             </div>
