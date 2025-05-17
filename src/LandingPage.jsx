@@ -1,9 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 function LandingPage() {
     return (
         <div className="sfs-root">
-            {/* Navigation */}
             <nav className="sfs-navbar" role="navigation" aria-label="Main navigation">
                 <div className="sfs-navbar-content">
                     <div className="sfs-navbar-brand">
@@ -12,7 +12,7 @@ function LandingPage() {
                             alt="Smiles for Speech logo: a smiley face"
                             className="sfs-logo"
                         />
-                        <h1 className="sfs-title">Smiles for Speech</h1>
+                        <a href='/'><h1 className="sfs-title">Smiles for Speech</h1></a>
                     </div>
                     <div className="sfs-navbar-links">
                         <a href="/" className="sfs-link" aria-current="page">Home</a>
@@ -42,4 +42,4 @@ function LandingPage() {
     );
 }
 
-export default LandingPage; 
+export default LandingPage;
