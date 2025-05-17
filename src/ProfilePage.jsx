@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
-import { authAPI, uploadAPI } from './services/api';
+import { authAPI, uploadAPI, profilesAPI, screeningAPI } from './services/api';
 import { logout, getUser } from './utils/auth';
 
 function ProfilePage() {
@@ -51,11 +51,20 @@ function ProfilePage() {
                     if (userData.data.profilePicture) setProfilePic(userData.data.profilePicture);
                 }
 
-                if (childrenList.length > 0) {
-                    const firstChild = childrenList[0];
-                    setSelectedChild(firstChild);
-                    const hasTest = firstChild.testResults && firstChild.testResults.length > 0;
-                    setTestResult(hasTest ? "Test results found" : "No test result available.");
+                // Fetch child profiles
+                const profilesResponse = await profilesAPI.getProfiles();
+                if (profilesResponse && profilesResponse.data) {
+                    setChildrenList(profilesResponse.data);
+                    
+                    // If there are child profiles, select the first one
+                    if (profilesResponse.data.length > 0) {
+                        const firstChild = profilesResponse.data[0];
+                        setSelectedChild(firstChild);
+                        
+                        // Set test results if available
+                        const hasTest = firstChild.testResults && firstChild.testResults.length > 0;
+                        setTestResult(hasTest ? "Test results found" : "No test result available.");
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching user data:', error);
@@ -76,6 +85,30 @@ function ProfilePage() {
             const hasTest = selectedChild.testResults && selectedChild.testResults.length > 0;
             setTestResult(hasTest ? "Test results found" : "No test result available.");
             setSummary("No Summary Available");
+            
+            // Fetch assessment results for the selected child
+            if (selectedChild.id) {
+                const fetchAssessments = async () => {
+                    try {
+                        const assessmentsResponse = await screeningAPI.getScreeningsByProfile(selectedChild.id);
+                        
+                        if (assessmentsResponse && assessmentsResponse.data && assessmentsResponse.data.length > 0) {
+                            // Set test result if available
+                            const latestAssessment = assessmentsResponse.data[0]; // Assuming sorted by date
+                            setTestResult(`Risk Level: ${latestAssessment.riskLevel || 'Unknown'} (${new Date(latestAssessment.createdAt).toLocaleDateString()})`);
+                            
+                            // Set summary if available
+                            if (latestAssessment.recommendations && latestAssessment.recommendations.length > 0) {
+                                setSummary(`${latestAssessment.recommendations[0]}`);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error fetching assessments:', error);
+                    }
+                };
+                
+                fetchAssessments();
+            }
         }
     }, [selectedChild]);
 
@@ -185,7 +218,7 @@ function ProfilePage() {
         history.push('/login');
     };
 
-    const handleAddChild = (e) => {
+    const handleAddChild = async (e) => {
         e.preventDefault();
         if (!childName || !childAge) {
             setSidebarError("Child's name and age are required");
@@ -193,29 +226,84 @@ function ProfilePage() {
             return;
         }
 
-        const newChild = {
-            id: Date.now(),
-            name: childName,
-            age: childAge,
-            testResults: []
-        };
+        try {
+            setSidebarError('');
+            setLoading(true);
+            
+            // Prepare child profile data
+            const childProfileData = {
+                name: childName,
+                age: childAge
+            };
+            
+            // Call API to create child profile
+            const response = await profilesAPI.createProfile(childProfileData);
+            
+            if (response && response.data) {
+                // Add the new child to the list
+                const newChild = response.data;
+                const updatedChildren = [...childrenList, newChild];
+                setChildrenList(updatedChildren);
+                setSelectedChild(newChild);
 
-        const updatedChildren = [...childrenList, newChild];
-        setChildrenList(updatedChildren);
-        setSelectedChild(newChild);
-
-        setChildName('');
-        setChildAge('');
-        setSidebarSuccess('Child profile added successfully!');
-        setSidebarError('');
-
-        setTimeout(() => {
-            setSidebarSuccess('');
-        }, 3000);
+                // Reset form fields
+                setChildName('');
+                setChildAge('');
+                setSidebarSuccess('Child profile added successfully!');
+                
+                setTimeout(() => {
+                    setSidebarSuccess('');
+                }, 3000);
+            }
+        } catch (error) {
+            console.error('Error creating child profile:', error);
+            setSidebarError(error.message || 'Failed to create child profile');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSelectChild = (child) => {
         setSelectedChild(child);
+    };
+
+    const handleDeleteChild = async (childId) => {
+        if (!childId) return;
+
+        // Confirm deletion
+        if (!window.confirm('Are you sure you want to delete this child profile? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+            // Call the API to delete the child profile
+            await profilesAPI.deleteProfile(childId);
+            
+            // Update local state
+            const updatedChildren = childrenList.filter(child => child.id !== childId);
+            setChildrenList(updatedChildren);
+            
+            // If the deleted child was selected, clear the selection
+            if (selectedChild && selectedChild.id === childId) {
+                setSelectedChild(null);
+                setTestResult('No test result available.');
+                setSummary('No summary available.');
+            }
+            
+            setSidebarSuccess('Child profile deleted successfully!');
+            setTimeout(() => {
+                setSidebarSuccess('');
+            }, 3000);
+        } catch (error) {
+            console.error('Error deleting child profile:', error);
+            setSidebarError('Failed to delete child profile: ' + (error.message || 'Unknown error'));
+            setTimeout(() => {
+                setSidebarError('');
+            }, 5000);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const showCaregiverProfile = () => {
@@ -374,12 +462,36 @@ function ProfilePage() {
                                             fontSize: '0.9rem',
                                             background: selectedChild && selectedChild.id === child.id ? '#fff3e0' : 'transparent',
                                             borderRadius: '4px',
-                                            cursor: 'pointer'
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center'
                                         }}
-                                        onClick={() => handleSelectChild(child)}
                                     >
-                                        <div style={{ fontWeight: '600' }}>{child.name}</div>
-                                        <div style={{ color: '#666' }}>Age: {child.age}</div>
+                                        <div 
+                                            style={{ cursor: 'pointer', flex: 1 }}
+                                            onClick={() => handleSelectChild(child)}
+                                        >
+                                            <div style={{ fontWeight: '600' }}>{child.name}</div>
+                                            <div style={{ color: '#666' }}>Age: {child.age}</div>
+                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteChild(child.id);
+                                            }}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                color: '#f44336',
+                                                cursor: 'pointer',
+                                                fontSize: '1rem',
+                                                padding: '4px 8px',
+                                                borderRadius: '4px'
+                                            }}
+                                            title="Delete child profile"
+                                        >
+                                            ×
+                                        </button>
                                     </div>
                                 ))}
                             </div>
@@ -402,13 +514,54 @@ function ProfilePage() {
 
                                 <div style={{ textAlign: 'center' }}>
                                     <img
-                                        src={`https://api.dicebear.com/6.x/avataaars/svg?seed=${selectedChild.name}`}
+                                        src={selectedChild.photoUrl || `https://api.dicebear.com/6.x/avataaars/svg?seed=${selectedChild.name}`}
                                         alt="Child Profile"
                                         className="sfs-photo"
                                         style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }}
                                     />
                                     <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#111', marginBottom: '0.5rem' }}>{selectedChild.name}</div>
                                     <div style={{ fontSize: '1.1rem', color: '#555', marginBottom: '1.5rem' }}>Age: {selectedChild.age}</div>
+                                    
+                                    {/* Display additional child data if available */}
+                                    {selectedChild.birthDate && (
+                                        <div style={{ fontSize: '1rem', color: '#555', marginBottom: '0.5rem' }}>
+                                            <strong>Birth Date:</strong> {selectedChild.birthDate}
+                                        </div>
+                                    )}
+                                    
+                                    {selectedChild.gender && (
+                                        <div style={{ fontSize: '1rem', color: '#555', marginBottom: '0.5rem' }}>
+                                            <strong>Gender:</strong> {selectedChild.gender}
+                                        </div>
+                                    )}
+                                    
+                                    {selectedChild.developmentHistory && (
+                                        <div style={{ fontSize: '1rem', color: '#555', marginBottom: '1.5rem', textAlign: 'left' }}>
+                                            <strong>Development History:</strong>
+                                            <p style={{ marginTop: '0.5rem' }}>{selectedChild.developmentHistory}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Only show this button if there are no test results yet */}
+                                    {testResult === 'No test result available.' && (
+                                        <Link 
+                                            to={`/assessment/${selectedChild.id}`} 
+                                            className="sfs-get-started-btn" 
+                                            style={{ 
+                                                marginBottom: '1rem',
+                                                display: 'inline-block',
+                                                textDecoration: 'none',
+                                                background: '#f9c32b',
+                                                color: 'white',
+                                                padding: '0.75rem 1.5rem',
+                                                borderRadius: '0.5rem',
+                                                fontWeight: '600',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                            }}
+                                        >
+                                            Take Assessment
+                                        </Link>
+                                    )}
                                 </div>
                             </>
                         ) : (
@@ -513,29 +666,34 @@ function ProfilePage() {
                             <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Test Result</h3>
                             <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{testResult}</div>
 
-                            {/* Assessment Button */}
-                            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                                <Link to="/assessment" style={{ textDecoration: 'none' }}>
-                                    <button
-                                        style={{
-                                            background: '#f9c32b',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '0.5rem',
-                                            padding: '0.75rem 1.5rem',
-                                            fontSize: '1rem',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                            transition: 'all 0.2s ease'
-                                        }}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e8b52a'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f9c32b'}
+                            {/* Assessment Button - Only show if there are already test results */}
+                            {selectedChild && testResult !== 'No test result available.' && (
+                                <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                                    <Link 
+                                        to={`/assessment/${selectedChild.id}`}
+                                        style={{ textDecoration: 'none' }}
                                     >
-                                        Take Assessment!
-                                    </button>
-                                </Link>
-                            </div>
+                                        <button
+                                            style={{
+                                                background: '#f9c32b',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '0.5rem',
+                                                padding: '0.75rem 1.5rem',
+                                                fontSize: '1rem',
+                                                fontWeight: '600',
+                                                cursor: 'pointer',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                                transition: 'all 0.2s ease'
+                                            }}
+                                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e8b52a'}
+                                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f9c32b'}
+                                        >
+                                            Take New Assessment
+                                        </button>
+                                    </Link>
+                                </div>
+                            )}
                         </section>
 
                         {/* Summary Section */}
