@@ -25,8 +25,7 @@ function LoginPage() {
             // Redirect to dashboard or profile page
             history.push('/profile');
         } catch (err) {
-            // Display error message directly from the API service
-            setError(err.message);
+            setError(err.message || 'Failed to log in. Please check your credentials.');
         } finally {
             setIsLoading(false);
         }

@@ -101,7 +101,7 @@ function EducationPage() {
         <div className="sfs-root">
             <main className="sfs-hero" style={{ alignItems: 'stretch', paddingTop: '2rem', paddingBottom: '2rem' }}>
                 <section style={{ 
-                    maxWidth: '50rem', 
+                    maxWidth: '55rem', 
                     margin: '0 auto', 
                     background: '#fff', 
                     borderRadius: '1rem', 
