@@ -15,6 +15,9 @@
     background: #fff;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
     border-bottom: 1px solid #f9c32b;
+    width: 100%;
+    position: relative;
+    z-index: 10;
 }
 
 .sfs-navbar-content {
@@ -100,6 +103,7 @@
     align-items: center;
     justify-content: center;
     text-align: center;
+    padding: 2rem 1rem;
 }
 
 .sfs-hero-title {
@@ -107,6 +111,7 @@
     font-weight: 800;
     color: #111;
     margin-bottom: 1.5rem;
+    line-height: 1.1;
 }
 
 @media (min-width: 640px) {
@@ -150,4 +155,104 @@
     color: #111;
     outline: 2px solid #f9c32b;
     outline-offset: 2px;
+}
+
+/* Responsive Styles */
+@media (max-width: 900px) {
+    .sfs-navbar-content {
+        padding: 0 0.5rem;
+    }
+
+    .sfs-title {
+        font-size: 1.5rem;
+    }
+
+    .sfs-logo {
+        height: 2.5rem;
+        width: 2.5rem;
+        min-width: 2.5rem;
+    }
+
+    .sfs-navbar-links {
+        gap: 1rem;
+    }
+
+    .sfs-link,
+    .sfs-login-btn {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .sfs-navbar-content {
+        flex-direction: column;
+        height: auto;
+        gap: 0.5rem;
+        padding: 0.5rem 0.25rem;
+    }
+
+    .sfs-navbar-brand {
+        gap: 0.5rem;
+    }
+
+    .sfs-title {
+        font-size: 1.15rem;
+    }
+
+    .sfs-logo {
+        height: 2rem;
+        width: 2rem;
+        min-width: 2rem;
+    }
+
+    .sfs-navbar-links {
+        gap: 0.5rem;
+    }
+
+    .sfs-link,
+    .sfs-login-btn {
+        font-size: 0.95rem;
+        padding: 0.4rem 0.7rem;
+    }
+
+    .sfs-hero-title {
+        font-size: 1.5rem;
+    }
+
+    .sfs-hero-desc {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .sfs-get-started-btn {
+        font-size: 1rem;
+        padding: 0.6rem 1.2rem;
+    }
+
+    .sfs-hero {
+        padding: 1.5rem 0.5rem;
+    }
+
+    .sfs-photo {
+        width: 120px;
+        height: 120px;
+        max-width: 90vw;
+        max-height: 60vw;
+        margin-bottom: 1.2rem;
+    }
+}
+
+.sfs-photo {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 180px;
+    height: 180px;
+    max-width: 80vw;
+    max-height: 40vw;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
 }
