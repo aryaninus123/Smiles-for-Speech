@@ -23,4 +23,4 @@ npm run build
 
 - `/src` - React components and application code
 - `/public` - Static assets
-- `/dist` - Production build (created when running `npm run build`) 
+- `/dist` - Production build (created when running `npm run build`)
