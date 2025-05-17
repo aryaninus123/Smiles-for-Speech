@@ -1,9 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 function LandingPage() {
     return (
         <div className="sfs-root">
-            {/* Navigation */}
             <nav className="sfs-navbar" role="navigation" aria-label="Main navigation">
                 <div className="sfs-navbar-content">
                     <div className="sfs-navbar-brand">
@@ -12,12 +12,12 @@ function LandingPage() {
                             alt="Smiles for Speech logo: a smiley face"
                             className="sfs-logo"
                         />
-                        <h1 className="sfs-title">Smiles for Speech</h1>
+                        <Link to='/'><h1 className="sfs-title">Smiles for Speech</h1></Link>
                     </div>
                     <div className="sfs-navbar-links">
-                        <a href="/" className="sfs-link" aria-current="page">Home</a>
-                        <a href="/about" className="sfs-link">About Us</a>
-                        <a href="/login" className="sfs-login-btn" aria-label="Log in to your account">Log In</a>
+                        <Link to="/" className="sfs-link" aria-current="page">Home</Link>
+                        <Link to="/about" className="sfs-link">About Us</Link>
+                        <Link to="/login" className="sfs-login-btn" aria-label="Log in to your account">Log In</Link>
                     </div>
                 </div>
             </nav>
@@ -30,16 +30,16 @@ function LandingPage() {
                 <p className="sfs-hero-desc">
                     Smiles for Speech provides personalized resources and support for children with disabilities and their families in underserved communities.
                 </p>
-                <a
-                    href="/signup"
+                <Link
+                    to="/signup"
                     className="sfs-get-started-btn"
                     aria-label="Get started with personalized support"
                 >
                     Get Started
-                </a>
+                </Link>
             </main>
         </div>
     );
 }
 
-export default LandingPage; 
+export default LandingPage;
