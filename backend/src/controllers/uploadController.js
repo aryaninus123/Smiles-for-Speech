@@ -21,6 +21,13 @@ const generateUniqueId = () => {
  */
 const uploadFile = async (req, res) => {
   try {
+    console.log('Upload request received:', { 
+      hasFile: !!req.file, 
+      fileSize: req.file ? req.file.size : 'N/A',
+      type: req.body.type,
+      user: req.user.uid 
+    });
+
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -41,12 +48,14 @@ const uploadFile = async (req, res) => {
     
     // Full path in storage bucket
     const filePath = `${folder}/${filename}`;
+    console.log('File will be uploaded to:', filePath);
     
     // Create a temporary file
     const tempFilePath = path.join(os.tmpdir(), filename);
     fs.writeFileSync(tempFilePath, req.file.buffer);
     
     // Upload to Firebase Storage
+    console.log('Uploading to Firebase Storage...');
     await bucket.upload(tempFilePath, {
       destination: filePath,
       metadata: {
@@ -57,30 +66,41 @@ const uploadFile = async (req, res) => {
         }
       }
     });
+    console.log('Upload to Firebase Storage complete');
     
     // Remove the temporary file
     fs.unlinkSync(tempFilePath);
     
     // Get the file URL
+    console.log('Getting signed URL...');
     const file = bucket.file(filePath);
     const [url] = await file.getSignedUrl({
       action: 'read',
       expires: '03-01-2500' // Far future expiration
     });
+    console.log('Signed URL generated');
     
-    res.status(200).json({
+    const responseData = {
       success: true,
       data: {
         filename,
         filePath,
         url
       }
+    };
+    
+    console.log('Upload successful, returning URL:', { 
+      filePath, 
+      hasUrl: !!url 
     });
+    
+    res.status(200).json(responseData);
   } catch (error) {
     console.error('Error uploading file:', error);
     res.status(500).json({
       success: false,
-      error: 'Server error'
+      error: 'Server error',
+      message: error.message
     });
   }
 };
