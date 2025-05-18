@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { uploadAPI } from '../services/api';
+import { uploadAPI, profilesAPI } from '../services/api';
 
 function ChildProfile({ 
     selectedChild, 
@@ -66,15 +66,28 @@ function ChildProfile({
                 }
             }
 
+            // Calculate birthDate from age for update
+            const today = new Date();
+            const birthYear = today.getFullYear() - parseInt(editChildAge, 10);
+            const birthDate = new Date(birthYear, today.getMonth(), today.getDate()).toISOString().split('T')[0];
+
             // Update child data
             const updatedChild = {
                 ...editingChild,
                 name: editChildName,
+                birthDate: birthDate,
                 age: editChildAge,
                 photoUrl: childPicUrl
             };
 
-            // Call the parent handler
+            // Call the backend API to update the profile
+            await profilesAPI.updateProfile(editingChild.id, {
+                name: editChildName,
+                birthDate: birthDate,
+                photoUrl: childPicUrl
+            });
+
+            // Call the parent handler to update UI
             onSaveChild(updatedChild);
             setSuccess('Child profile updated successfully!');
             
@@ -239,76 +252,42 @@ function ChildProfile({
                 <div style={{ fontSize: '1.1rem', color: '#555', marginBottom: '1.5rem' }}>
                     Age: {selectedChild.age}
                 </div>
-            
-                {/* Assessment Button - Only show if there are no test results yet */}
-                {testResult === 'No test result available.' && (
-                    <Link 
-                        to={"/assessment/" + selectedChild.id} 
-                        className="sfs-get-started-btn" 
-                        style={{ 
-                            marginBottom: '1rem',
-                            display: 'inline-block',
-                            textDecoration: 'none',
-                            background: '#f9c32b',
-                            color: 'white',
-                            padding: '0.75rem 1.5rem',
-                            borderRadius: '0.5rem',
-                            fontWeight: '600',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                        }}
-                    >
-                        Take Assessment
-                    </Link>
-                )}
             </div>
 
             {/* Test Result Section */}
             <section style={{ marginTop: '2.5rem', marginBottom: '1.5rem' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>
-                    Test Result
-                </h3>
-                <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>
-                    {testResult}
-                </div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Test Result</h3>
+                <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{testResult}</div>
 
-                {/* Assessment Button - Only show if there are already test results */}
-                {testResult !== 'No test result available.' && (
-                    <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                        <Link 
-                            to={"/assessment/" + selectedChild.id}
-                            style={{ textDecoration: 'none' }}
+                {/* Assessment Button */}
+                <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                    <Link to={`/assessment/${selectedChild.id}`} style={{ textDecoration: 'none' }}>
+                        <button
+                            style={{
+                                background: '#f9c32b',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '0.5rem',
+                                padding: '0.75rem 1.5rem',
+                                fontSize: '1rem',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                transition: 'all 0.2s ease'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e8b52a'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f9c32b'}
                         >
-                            <button
-                                style={{
-                                    background: '#f9c32b',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '0.5rem',
-                                    padding: '0.75rem 1.5rem',
-                                    fontSize: '1rem',
-                                    fontWeight: '600',
-                                    cursor: 'pointer',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                    transition: 'all 0.2s ease'
-                                }}
-                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e8b52a'}
-                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f9c32b'}
-                            >
-                                Take New Assessment
-                            </button>
-                        </Link>
-                    </div>
-                )}
+                            Take Assessment!
+                        </button>
+                    </Link>
+                </div>
             </section>
 
             {/* Summary Section */}
             <section style={{ marginBottom: '0.5rem' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>
-                    Summary
-                </h3>
-                <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>
-                    {summary}
-                </div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Summary</h3>
+                <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{summary}</div>
             </section>
         </>
     );
