@@ -105,33 +105,43 @@ function ProfilePage() {
 
     useEffect(() => {
         if (selectedChild) {
-            const hasTest = selectedChild.testResults && selectedChild.testResults.length > 0;
-            setTestResult(hasTest ? "Test results found" : "No test result available.");
+            setTestResult('No test result available.');
             setSummary("No Summary Available");
 
-            // Fetch assessment results for the selected child
             if (selectedChild.id) {
                 const fetchAssessments = async () => {
                     try {
                         const assessmentsResponse = await screeningAPI.getScreeningsByProfile(selectedChild.id);
 
                         if (assessmentsResponse && assessmentsResponse.data && assessmentsResponse.data.length > 0) {
-                            // Set test result if available
-                            const latestAssessment = assessmentsResponse.data[0]; // Assuming sorted by date
-                            setTestResult(`Risk Level: ${latestAssessment.riskLevel || 'Unknown'} (${new Date(latestAssessment.createdAt).toLocaleDateString()})`);
+                            const latestAssessment = assessmentsResponse.data[0];
 
-                            // Set summary if available
-                            if (latestAssessment.recommendations && latestAssessment.recommendations.length > 0) {
-                                setSummary(`${latestAssessment.recommendations[0]}`);
+                            if (latestAssessment.createdAt) {
+                                setTestResult(`Last assessment on ${new Date(latestAssessment.createdAt).toLocaleDateString()}`);
+                            } else {
+                                setTestResult('Assessment result found.');
                             }
+
+                            if (latestAssessment.recommendations && latestAssessment.recommendations.length > 0) {
+                                setSummary(latestAssessment.recommendations.join('\n'));
+                            } else {
+                                setSummary('No specific recommendations available.');
+                            }
+                        } else {
+                            setTestResult('No test result available.');
+                            setSummary('No Summary Available');
                         }
                     } catch (error) {
                         console.error('Error fetching assessments:', error);
+                        setTestResult('Error fetching test results.');
+                        setSummary('Error fetching summary.');
                     }
                 };
-
                 fetchAssessments();
             }
+        } else {
+            setTestResult('No test result available.');
+            setSummary('No Summary Available');
         }
     }, [selectedChild]);
 
@@ -619,15 +629,18 @@ function ProfilePage() {
                 }}>
                     <section style={{ maxWidth: '28rem', width: '100%', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '2rem', margin: '0 auto' }}>
                         {selectedChild ? (
-                            <ChildProfile
-                                selectedChild={selectedChild}
-                                testResult={testResult}
-                                summary={summary}
-                                editingChild={editingChild}
-                                onEditChild={handleEditChild}
-                                onSaveChild={handleSaveChild}
-                                onCancelEdit={handleCancelChildEdit}
-                            />
+                            <div className="sfs-profile-grid">
+                                {/* Child Profile Display */}
+                                <ChildProfile 
+                                    selectedChild={selectedChild} 
+                                    testResult={testResult}
+                                    summary={summary} 
+                                    onEditChild={handleEditChild}
+                                    onSaveChild={handleSaveChild}
+                                    onCancelEdit={handleCancelChildEdit}
+                                    editingChild={editingChild}
+                                />
+                            </div>
                         ) : (
                             <>
                                 <h2 className="sfs-hero-title" style={{ fontSize: '2rem', marginBottom: '1.5rem' }}>Your Caregiver Profile</h2>

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { uploadAPI, profilesAPI } from '../services/api';
 
 function ChildProfile({ 
     selectedChild, 
-    testResult, 
+    testResult,
     summary, 
     onEditChild, 
     onSaveChild,
@@ -249,46 +249,41 @@ function ChildProfile({
                 <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#111', marginBottom: '0.5rem' }}>
                     {selectedChild.name}
                 </div>
-                <div style={{ fontSize: '1.1rem', color: '#555', marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '1rem', color: '#666', marginBottom: '1.5rem' }}>
                     Age: {selectedChild.age}
                 </div>
-            </div>
 
-            {/* Test Result Section */}
-            <section style={{ marginTop: '2.5rem', marginBottom: '1.5rem' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Test Result</h3>
-                <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{testResult}</div>
-
-                {/* Assessment Button */}
-                <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                    <Link to={`/assessment/${selectedChild.id}`} style={{ textDecoration: 'none' }}>
-                        <button
-                            style={{
-                                background: '#f9c32b',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '0.5rem',
-                                padding: '0.75rem 1.5rem',
-                                fontSize: '1rem',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                transition: 'all 0.2s ease'
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e8b52a'}
-                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f9c32b'}
-                        >
-                            Take Assessment!
-                        </button>
+                <div className="sfs-assessment-section" style={{ padding: '1rem', background: '#f9f9f9', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.1rem', color: '#333', marginBottom: '0.75rem' }}>Test Result</h3>
+                    <p style={{ fontSize: '0.95rem', color: testResult && !testResult.toLowerCase().includes('no test') && !testResult.toLowerCase().includes('error') ? '#555' : '#777' }}>
+                        {testResult || 'No test result available.'}
+                    </p>
+                    <Link 
+                        to={`/assessment/${selectedChild.id}`} 
+                        className="sfs-button sfs-take-assessment-btn" 
+                        style={{ 
+                            display: 'inline-block',
+                            marginTop: '0.75rem', 
+                            padding: '0.6rem 1.2rem', 
+                            fontSize: '0.9rem' 
+                        }}
+                    >
+                        {testResult && !testResult.toLowerCase().includes('no test') && !testResult.toLowerCase().includes('error') ? 'Retake Assessment' : 'Take Assessment'}
                     </Link>
                 </div>
-            </section>
 
-            {/* Summary Section */}
-            <section style={{ marginBottom: '0.5rem' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Summary</h3>
-                <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{summary}</div>
-            </section>
+                <div className="sfs-summary-section" style={{ padding: '1rem', background: '#f9f9f9', borderRadius: '0.5rem' }}>
+                    <h3 style={{ fontSize: '1.1rem', color: '#333', marginBottom: '0.75rem' }}>Summary</h3>
+                    {summary ? (
+                        // If summary is a string with newlines from recommendations.join('\n')
+                        summary.split('\n').map((line, index) => (
+                            <p key={index} style={{ fontSize: '0.95rem', color: '#555', margin: '0 0 0.25rem 0' }}>{line}</p>
+                        ))
+                    ) : (
+                        <p style={{ fontSize: '0.95rem', color: '#777' }}>No Summary Available</p>
+                    )}
+                </div>
+            </div>
         </>
     );
 }

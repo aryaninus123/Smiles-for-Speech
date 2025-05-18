@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Updated categories to use string IDs that match the backend ('q1', 'q2', etc.)
 const CATEGORIES = {
@@ -45,6 +45,9 @@ const getOverallSummary = (totalCounts) => {
 
 function ResultsSummary({ answers, savedResult, onBack }) {
     const [activeTab, setActiveTab] = useState('summary');
+    const [aiSummary, setAiSummary] = useState(null);
+    const [loadingAiSummary, setLoadingAiSummary] = useState(false);
+    const [aiError, setAiError] = useState(null);
     const categoryCounts = {};
     const totalCounts = { always: 0, often: 0, sometimes: 0, rarely: 0, never: 0 };
 
@@ -90,12 +93,15 @@ function ResultsSummary({ answers, savedResult, onBack }) {
         ((totalCounts.always || 0) + (totalCounts.often || 0) >= total / 2 ? 'Low' :
             (totalCounts.never || 0) + (totalCounts.rarely || 0) >= total / 2 ? 'High' : 'Medium');
 
-    const recommendations = savedResult?.recommendations || [
-        'Discuss these results with your child\'s healthcare provider',
-        'Continue monitoring your child\'s development',
-        'Engage in face-to-face play activities that encourage social interaction',
-        'Create opportunities for communication through daily activities'
-    ];
+    // Get the recommendations from AI summary or fallback to default
+    const recommendations = aiSummary?.recommendations && Array.isArray(aiSummary.recommendations)
+        ? aiSummary.recommendations
+        : savedResult?.recommendations || [
+            'Discuss these results with your child\'s healthcare provider',
+            'Continue monitoring your child\'s development',
+            'Engage in face-to-face play activities that encourage social interaction',
+            'Create opportunities for communication through daily activities'
+        ];
 
     // Local speech therapy resources for the Near You tab
     const localResources = [
@@ -125,6 +131,105 @@ function ResultsSummary({ answers, savedResult, onBack }) {
         }
     ];
 
+    // Effect to fetch AI-generated summary
+    useEffect(() => {
+        // Check for force refresh trigger
+        const forceRefreshKey = sessionStorage.getItem('forceRefreshAI');
+        if (forceRefreshKey) {
+            sessionStorage.removeItem('forceRefreshAI');
+            console.log('Force refresh detected');
+        }
+        
+        const fetchAiSummary = async () => {
+            if (!processedAnswers || processedAnswers.length === 0 || Object.keys(totalCounts).reduce((a, b) => a + b, 0) === 0) {
+                console.log('Skipping AI fetch - insufficient data:', { processedAnswers, totalCounts });
+                return;
+            }
+
+            setLoadingAiSummary(true);
+            setAiError(null);
+
+            try {
+                console.log('Starting AI summary fetch with data:', { processedAnswers, savedResult, riskLevel });
+                
+                const formattedAnswers = {};
+                processedAnswers.forEach(a => {
+                    if (a && a.id) {
+                        const id = a.id.toString().startsWith('q') ? a.id : `q${a.id}`;
+                        formattedAnswers[id] = a.answer;
+                    }
+                });
+
+                const childName = savedResult?.childName || "your child";
+                const childAge = savedResult?.childAge || "young";
+                
+                // Prepare data for the Firebase function
+                const requestData = {
+                    childName: childName,
+                    childAge: childAge,
+                    assessmentData: formattedAnswers // Sending the detailed answers
+                };
+
+                console.log('Calling Firebase function generateOpenAISummary with:', requestData);
+                
+                const response = await fetch('http://localhost:5001/smiles-for-speech-1b81d/us-central1/generateOpenAISummary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.text(); // Try to get error text
+                    console.error('Error response from Firebase function:', response.status, errorData);
+                    throw new Error(`Network response was not ok: ${response.status} - ${errorData}`);
+                }
+
+                const summaryData = await response.json();
+                
+                console.log('AI summary result from Firebase function:', summaryData);
+
+                if (summaryData && summaryData.overallSummary) { // Check for the new expected structure
+                    setAiSummary(summaryData); // Store the whole object
+                    console.log('Personalized AI summary received and set:', summaryData);
+                } else if (summaryData && summaryData.rawSummary) {
+                    // Handle cases where the OpenAI response wasn't perfect JSON but was wrapped
+                    setAiSummary({
+                        overallSummary: "AI response might need review: " + summaryData.rawSummary,
+                        positiveObservations: [],
+                        areasForSupport: [],
+                        recommendations: [summaryData.errorParsing || "Please check the raw summary."]
+                    });
+                    setAiError(summaryData.errorParsing || 'AI summary was not in the expected format.');
+                    console.warn('Received raw summary or parsing error from Firebase function:', summaryData);
+                } else {
+                    setAiError('Unable to generate AI summary. Using default recommendations.');
+                    console.warn('Received incomplete or unexpected summary from Firebase function:', summaryData);
+                }
+
+            } catch (error) {
+                console.error('Error fetching AI summary from Firebase function:', error);
+                setAiError(`Error: ${error.message}. Using default recommendations.`);
+            } finally {
+                setLoadingAiSummary(false);
+            }
+        };
+
+        fetchAiSummary();
+        
+        const timeoutId = setTimeout(() => {
+            if (loadingAiSummary) {
+                console.log('AI summary fetch timed out after 15 seconds'); // Increased timeout
+                setLoadingAiSummary(false);
+                setAiError('AI summary generation timed out. Using default recommendations.');
+            }
+        }, 15000); // Increased timeout to 15s
+        
+        return () => clearTimeout(timeoutId);
+    // Ensure dependencies are correctly stringified if they are objects/arrays
+    }, [JSON.stringify(processedAnswers), JSON.stringify(savedResult), riskLevel]); // Stringify complex dependencies
+
     const TabButton = ({ id, label, active }) => (
         <button
             onClick={() => setActiveTab(id)}
@@ -146,6 +251,17 @@ function ResultsSummary({ answers, savedResult, onBack }) {
         </button>
     );
 
+    // Get the summary text - from AI or fallback to default
+    const summaryText = aiSummary?.overallSummary || getOverallSummary(totalCounts);
+    
+    // Console log to debug AI summary
+    console.log('AI Summary Status:', { 
+        aiSummaryReceived: !!aiSummary, 
+        summaryText, 
+        loadingStatus: loadingAiSummary, 
+        error: aiError 
+    });
+    
     return (
         <div style={{ maxWidth: '44rem', margin: '2rem auto', padding: '0 1rem' }}>
             <h1 style={{ fontSize: '1.5rem', textAlign: 'center', fontWeight: 600, color: '#333', marginBottom: '2rem' }}>Assessment Results</h1>
@@ -186,11 +302,31 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                         fontWeight: '600',
                         fontSize: '1.2rem'
                     }}>
-                        {Math.round(getPercentage(totalCounts[mainResponse], total))}%
+                        {riskLevel === 'Low' ? '✓' : riskLevel === 'Medium' ? '!' : '⚠️'}
                     </div>
                     <div>
                         <h2 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Quick Summary</h2>
-                        <p>{getOverallSummary(totalCounts)}</p>
+                        {loadingAiSummary ? (
+                            <div>
+                                <p>Generating personalized assessment...</p>
+                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                    <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', background: '#2196F3', animation: 'pulse 1s infinite' }}></div>
+                                    <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', background: '#2196F3', animation: 'pulse 1s infinite 0.2s' }}></div>
+                                    <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', background: '#2196F3', animation: 'pulse 1s infinite 0.4s' }}></div>
+                                </div>
+                                <style>
+                                    {`
+                                    @keyframes pulse {
+                                        0% { transform: scale(1); opacity: 1; }
+                                        50% { transform: scale(1.5); opacity: 0.7; }
+                                        100% { transform: scale(1); opacity: 1; }
+                                    }
+                                    `}
+                                </style>
+                            </div>
+                        ) : (
+                            <p>{summaryText}</p>
+                        )}
                     </div>
                 </div>
 
@@ -211,6 +347,131 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                             Risk Level: {riskLevel}
                         </span>
                     </div>
+                )}
+                
+                {/* AI Generation Status Indicator */}
+                <div style={{
+                    marginTop: '1rem',
+                    padding: '0.75rem',
+                    background: '#e3f2fd',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.9rem',
+                    color: '#0d47a1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                }}>
+                    <strong>AI Status:</strong> 
+                    {loadingAiSummary ? 'Generating personalized summary...' : 
+                     aiSummary ? 'Personalized assessment completed' : 
+                     aiError ? 'Error: Using default content' : 'Using default content'}
+                </div>
+                
+                {aiSummary?.note && (
+                    <div style={{
+                        marginTop: '1rem',
+                        padding: '0.75rem',
+                        background: '#e8f5e9',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.9rem',
+                        color: '#2e7d32'
+                    }}>
+                        <strong>Note:</strong> {aiSummary.note}
+                    </div>
+                )}
+                
+                {aiError && (
+                    <div style={{
+                        marginTop: '1rem',
+                        padding: '0.75rem',
+                        background: '#ffebee',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.9rem',
+                        color: '#c62828'
+                    }}>
+                        {aiError}
+                    </div>
+                )}
+                
+                {/* Button to force refresh AI content */}
+                {!loadingAiSummary && (
+                    <button 
+                        onClick={async () => {
+                            console.log('Manually refreshing AI content');
+                            setLoadingAiSummary(true);
+                            setAiError(null);
+                            setAiSummary(null);
+                            
+                            try {
+                                const formattedAnswers = {};
+                                processedAnswers.forEach(a => {
+                                    if (a && a.id) {
+                                        const id = a.id.toString().startsWith('q') ? a.id : `q${a.id}`;
+                                        formattedAnswers[id] = a.answer;
+                                    }
+                                });
+
+                                const childName = savedResult?.childName || "your child";
+                                const childAge = savedResult?.childAge || "young";
+                                
+                                const requestData = {
+                                    childName: childName,
+                                    childAge: childAge,
+                                    assessmentData: formattedAnswers
+                                };
+
+                                console.log('Regenerate: Calling Firebase function with:', requestData);
+                                
+                                const response = await fetch('http://localhost:5001/smiles-for-speech-1b81d/us-central1/generateOpenAISummary', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify(requestData),
+                                });
+
+                                if (!response.ok) {
+                                    const errorData = await response.text();
+                                    console.error('Regenerate: Error response from Firebase function:', response.status, errorData);
+                                    throw new Error(`Network response was not ok: ${response.status} - ${errorData}`);
+                                }
+
+                                const summaryData = await response.json();
+                                console.log('Regenerate: Received new AI summary:', summaryData);
+
+                                if (summaryData && summaryData.overallSummary) {
+                                    setAiSummary(summaryData);
+                                } else if (summaryData && summaryData.rawSummary) {
+                                    setAiSummary({
+                                        overallSummary: "AI response might need review: " + summaryData.rawSummary,
+                                        positiveObservations: [],
+                                        areasForSupport: [],
+                                        recommendations: [summaryData.errorParsing || "Please check the raw summary."]
+                                    });
+                                    setAiError(summaryData.errorParsing || 'AI summary was not in the expected format.');
+                                } else {
+                                    setAiError('Unable to generate AI summary. Using default recommendations.');
+                                }
+                            } catch (error) {
+                                console.error('Error regenerating AI summary:', error);
+                                setAiError(`Error: ${error.message}`);
+                            } finally {
+                                setLoadingAiSummary(false);
+                            }
+                        }}
+                        style={{
+                            marginTop: '1rem',
+                            padding: '0.5rem 1rem',
+                            background: '#2196F3',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '0.25rem',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem'
+                        }}
+                    >
+                        Regenerate AI Summary
+                    </button>
                 )}
             </div>
 
@@ -282,6 +543,28 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                         }}>
                             <strong>Important Note:</strong> This screening tool is not a diagnosis. It is designed to help identify potential areas that may need further evaluation.
                         </div>
+
+                        {aiSummary && aiSummary.positiveObservations && aiSummary.positiveObservations.length > 0 && (
+                            <>
+                                <h3 style={{ color: '#444', marginBottom: '1rem' }}>Positive Observations</h3>
+                                <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', marginBottom: '1.5rem' }}>
+                                    {aiSummary.positiveObservations.map((item, index) => (
+                                        <li key={`pos-${index}`} style={{ marginBottom: '0.5rem' }}>{item}</li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
+
+                        {aiSummary && aiSummary.areasForSupport && aiSummary.areasForSupport.length > 0 && (
+                            <>
+                                <h3 style={{ color: '#444', marginBottom: '1rem' }}>Areas for Support</h3>
+                                <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', marginBottom: '1.5rem' }}>
+                                    {aiSummary.areasForSupport.map((item, index) => (
+                                        <li key={`sup-${index}`} style={{ marginBottom: '0.5rem' }}>{item}</li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
 
                         <h3 style={{ color: '#444', marginBottom: '1rem' }}>Suggested Steps</h3>
                         <ul style={{ listStyle: 'none', padding: 0, marginBottom: '2rem' }}>

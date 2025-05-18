@@ -143,6 +143,9 @@ const createScreening = async (req, res) => {
       });
     }
     
+    // Get child profile data
+    const profileData = profileDoc.data();
+    
     // Calculate screening score based on the answers
     const score = calculateScreeningScore(answers);
     
@@ -164,12 +167,30 @@ const createScreening = async (req, res) => {
     
     const docRef = await screeningsCollection.add(screeningData);
     
+    // Calculate child's age from birthDate
+    let childAge = 'Unknown';
+    if (profileData.birthDate) {
+      const birthDate = new Date(profileData.birthDate);
+      const today = new Date();
+      childAge = today.getFullYear() - birthDate.getFullYear();
+      if (today.getMonth() < birthDate.getMonth() || 
+          (today.getMonth() === birthDate.getMonth() && 
+           today.getDate() < birthDate.getDate())) {
+        childAge--;
+      }
+    }
+    
+    // Add child profile info to the response
+    const responseData = {
+      id: docRef.id,
+      ...screeningData,
+      childName: profileData.name || 'Unknown',
+      childAge: childAge.toString()
+    };
+    
     res.status(201).json({
       success: true,
-      data: {
-        id: docRef.id,
-        ...screeningData
-      }
+      data: responseData
     });
   } catch (error) {
     console.error('Error creating screening:', error);
