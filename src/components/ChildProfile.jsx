@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { uploadAPI, profilesAPI } from '../services/api';
+import { FaPen } from 'react-icons/fa';
 
 function ChildProfile({ 
     selectedChild, 
-    testResult,
+    testResult, 
     summary, 
     onEditChild, 
     onSaveChild,
@@ -90,7 +91,7 @@ function ChildProfile({
             // Call the parent handler to update UI
             onSaveChild(updatedChild);
             setSuccess('Child profile updated successfully!');
-            
+
             setTimeout(() => {
                 setSuccess('');
             }, 3000);
@@ -130,26 +131,70 @@ function ChildProfile({
                         {success}
                     </div>
                 )}
-                
-                <img 
-                    src={editChildPic} 
-                    alt="Child Profile preview" 
-                    className="sfs-photo" 
-                    style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }} 
+
+                <img
+                    src={editChildPic}
+                    alt="Child Profile preview"
+                    className="sfs-photo"
+                    style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }}
                 />
-                
+
                 <div style={{ marginBottom: '1rem' }}>
                     <label htmlFor="childProfilePic" style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#111' }}>
                         Profile Picture
                     </label>
-                    <input
-                        type="file"
-                        id="childProfilePic"
-                        accept="image/*"
-                        className="sfs-login-input"
-                        style={{ width: '100%', marginBottom: '0.5rem' }}
-                        onChange={handleChildPicChange}
-                    />
+                    <div style={{
+                        border: '2px dashed #f9c32b',
+                        borderRadius: '0.5rem',
+                        padding: '1.25rem',
+                        backgroundColor: '#fffaf0',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                    }}>
+                        <label htmlFor="childProfilePic" style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            cursor: 'pointer'
+                        }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#f9c32b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h7"></path>
+                                <path d="M16 5h6v6"></path>
+                                <path d="M8 12l8-8v8h-8z"></path>
+                            </svg>
+                            <span style={{
+                                marginTop: '0.75rem',
+                                fontSize: '0.9rem',
+                                fontWeight: 500,
+                                color: '#666'
+                            }}>
+                                Choose a new photo or drag it here
+                            </span>
+                            <span style={{
+                                fontSize: '0.8rem',
+                                color: '#888',
+                                marginTop: '0.5rem'
+                            }}>
+                                JPG, PNG or GIF (max. 5MB)
+                            </span>
+                        </label>
+                        <input
+                            type="file"
+                            id="childProfilePic"
+                            name="childProfilePic"
+                            accept="image/*"
+                            style={{
+                                width: '0.1px',
+                                height: '0.1px',
+                                opacity: 0,
+                                overflow: 'hidden',
+                                position: 'absolute',
+                                zIndex: '-1'
+                            }}
+                            onChange={handleChildPicChange}
+                        />
+                    </div>
                 </div>
 
                 <div style={{ marginBottom: '1rem' }}>
@@ -184,25 +229,25 @@ function ChildProfile({
                     />
                 </div>
 
-                <button 
-                    type="submit" 
-                    className="sfs-get-started-btn" 
+                <button
+                    type="submit"
+                    className="sfs-get-started-btn"
                     style={{ marginRight: '1rem' }}
                     disabled={loading}
                 >
                     {loading ? 'Saving...' : 'Save Changes'}
                 </button>
-                <button 
-                    type="button" 
-                    className="sfs-link" 
-                    style={{ 
-                        background: 'none', 
-                        border: 'none', 
-                        color: '#f9c32b', 
-                        fontWeight: 700, 
-                        fontSize: '1rem', 
-                        cursor: 'pointer' 
-                    }} 
+                <button
+                    type="button"
+                    className="sfs-link"
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#f9c32b',
+                        fontWeight: 700,
+                        fontSize: '1rem',
+                        cursor: 'pointer'
+                    }}
                     onClick={onCancelEdit}
                 >
                     Cancel
@@ -223,13 +268,13 @@ function ChildProfile({
                     style={{
                         background: 'none',
                         border: 'none',
-                        color: '#f9c32b',
+                        color: '#111',
                         fontWeight: 700,
                         fontSize: '1rem',
                         cursor: 'pointer'
                     }}
                 >
-                    Edit Profile
+                    <FaPen />
                 </button>
             </div>
 
@@ -238,12 +283,12 @@ function ChildProfile({
                     src={avatarUrl}
                     alt="Child Profile"
                     className="sfs-photo"
-                    style={{ 
-                        width: '150px', 
-                        height: '150px', 
-                        borderRadius: '50%', 
-                        objectFit: 'cover', 
-                        marginBottom: '1.5rem' 
+                    style={{
+                        width: '150px',
+                        height: '150px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        marginBottom: '1.5rem'
                     }}
                 />
                 <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#111', marginBottom: '0.5rem' }}>
@@ -271,19 +316,13 @@ function ChildProfile({
                         {testResult && !testResult.toLowerCase().includes('no test') && !testResult.toLowerCase().includes('error') ? 'Retake Assessment' : 'Take Assessment'}
                     </Link>
                 </div>
-
-                <div className="sfs-summary-section" style={{ padding: '1rem', background: '#f9f9f9', borderRadius: '0.5rem' }}>
-                    <h3 style={{ fontSize: '1.1rem', color: '#333', marginBottom: '0.75rem' }}>Summary</h3>
-                    {summary ? (
-                        // If summary is a string with newlines from recommendations.join('\n')
-                        summary.split('\n').map((line, index) => (
-                            <p key={index} style={{ fontSize: '0.95rem', color: '#555', margin: '0 0 0.25rem 0' }}>{line}</p>
-                        ))
-                    ) : (
-                        <p style={{ fontSize: '0.95rem', color: '#777' }}>No Summary Available</p>
-                    )}
-                </div>
             </div>
+
+            {/* Summary Section */}
+            <section style={{ marginBottom: '0.5rem' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Summary</h3>
+                <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{summary}</div>
+            </section>
         </>
     );
 }
