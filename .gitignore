@@ -1,3 +1,4 @@
+node_modules
 # Dependencies
 /node_modules
 /functions/node_modules
@@ -30,3 +31,6 @@ yarn-debug.log*
 yarn-error.log*
 *.jsx.backup
 *.js.backup
+node_modules
+node_modules
+node_modules

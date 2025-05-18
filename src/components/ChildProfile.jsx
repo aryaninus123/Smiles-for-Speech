@@ -3,15 +3,16 @@ import { Link } from 'react-router-dom';
 import { uploadAPI, profilesAPI } from '../services/api';
 import { FaPen } from 'react-icons/fa';
 
-function ChildProfile({ 
-    selectedChild, 
-    testResult, 
-    summary, 
-    onEditChild, 
+function ChildProfile({
+    selectedChild,
+    testResult,
+    summary,
+    onEditChild,
     onSaveChild,
     onCancelEdit,
     editingChild,
-    onDeleteChild
+    onDeleteChild,
+    assessmentId
 }) {
     const [editChildName, setEditChildName] = useState(editingChild ? editingChild.name : '');
     const [editChildAge, setEditChildAge] = useState(editingChild ? editingChild.age : '');
@@ -20,6 +21,15 @@ function ChildProfile({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [latestAssessmentId, setLatestAssessmentId] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    // Set latestAssessmentId from parent component
+    React.useEffect(() => {
+        if (assessmentId) {
+            setLatestAssessmentId(assessmentId);
+        }
+    }, [assessmentId]);
 
     React.useEffect(() => {
         if (editingChild) {
@@ -299,32 +309,62 @@ function ChildProfile({
                 <div style={{ fontSize: '1rem', color: '#666', marginBottom: '1.5rem' }}>
                     Age: {selectedChild.age}
                 </div>
+            </div>
 
-                <div className="sfs-assessment-section" style={{ padding: '1rem', background: '#f9f9f9', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
-                    <h3 style={{ fontSize: '1.1rem', color: '#333', marginBottom: '0.75rem' }}>Test Result</h3>
-                    <p style={{ fontSize: '0.95rem', color: testResult && !testResult.toLowerCase().includes('no test') && !testResult.toLowerCase().includes('error') ? '#555' : '#777' }}>
-                        {testResult || 'No test result available.'}
-                    </p>
-                    <Link 
-                        to={`/assessment/${selectedChild.id}`} 
-                        className="sfs-button sfs-take-assessment-btn" 
-                        style={{ 
-                            display: 'inline-block',
-                            marginTop: '0.75rem', 
-                            padding: '0.6rem 1.2rem', 
-                            fontSize: '0.9rem' 
-                        }}
-                    >
-                        {testResult && !testResult.toLowerCase().includes('no test') && !testResult.toLowerCase().includes('error') ? 'Retake Assessment' : 'Take Assessment'}
-                    </Link>
-                </div>
+            <div className="sfs-assessment-section" style={{ padding: '1rem', background: '#f9f9f9', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.1rem', color: '#333', marginBottom: '0.75rem' }}>Test Result</h3>
+                <p style={{ fontSize: '0.95rem', color: testResult && !testResult.toLowerCase().includes('no test') && !testResult.toLowerCase().includes('error') ? '#555' : '#777' }}>
+                    {testResult || 'No test result available.'}
+                </p>
+                <Link
+                    to={`/assessment/${selectedChild.id}`}
+                    className="sfs-button sfs-take-assessment-btn"
+                    style={{
+                        display: 'inline-block',
+                        marginTop: '0.75rem',
+                        padding: '0.6rem 1.2rem',
+                        fontSize: '0.9rem'
+                    }}
+                >
+                    {testResult && !testResult.toLowerCase().includes('no test') && !testResult.toLowerCase().includes('error') ? 'Retake Assessment' : 'Take Assessment'}
+                </Link>
             </div>
 
             {/* Summary Section */}
-            <section style={{ marginBottom: '0.5rem' }}>
+            <section style={{ marginBottom: '2rem' }}>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Summary</h3>
-                <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{summary}</div>
+                <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>
+                    {summary || 'No summary available yet. Complete an assessment to see results.'}
+                </div>
             </section>
+
+            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                {assessmentId ? (
+                    <Link to={`/results/${assessmentId}`} style={{ textDecoration: 'none' }}>
+                        <button
+                            style={{
+                                background: '#f9c32b',
+                                color: 'white',
+                                border: '2px solid #f9c32b',
+                                borderRadius: '0.5rem',
+                                padding: '0.75rem 1.5rem',
+                                fontSize: '1.1rem',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                boxShadow: '0 2px 4px rgba(249, 195, 43, 0.3)',
+                                transition: 'all 0.2s ease'
+                            }}
+                            aria-label="View next steps for the child (according to the assessment)"
+                        >
+                            More Details & Resources
+                        </button>
+                    </Link>
+                ) : (
+                    <div style={{ color: '#666', fontSize: '0.9rem' }}>
+                        Complete an assessment to see next steps
+                    </div>
+                )}
+            </div>
         </>
     );
 }

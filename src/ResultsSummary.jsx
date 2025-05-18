@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 // Updated categories to use string IDs that match the backend ('q1', 'q2', etc.)
 const CATEGORIES = {
@@ -44,7 +45,7 @@ const getOverallSummary = (totalCounts) => {
     return "You may want to continue observing your child's development.";
 };
 
-function ResultsSummary({ answers, savedResult, onBack }) {
+function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
     const [location, setLocation] = useState(null);
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState('summary');
@@ -142,7 +143,7 @@ function ResultsSummary({ answers, savedResult, onBack }) {
             sessionStorage.removeItem('forceRefreshAI');
             console.log('Force refresh detected');
         }
-        
+
         const fetchAiSummary = async () => {
             if (!processedAnswers || processedAnswers.length === 0 || Object.keys(totalCounts).reduce((a, b) => a + b, 0) === 0) {
                 console.log('Skipping AI fetch - insufficient data:', { processedAnswers, totalCounts });
@@ -154,7 +155,7 @@ function ResultsSummary({ answers, savedResult, onBack }) {
 
             try {
                 console.log('Starting AI summary fetch with data:', { processedAnswers, savedResult, riskLevel });
-                
+
                 const formattedAnswers = {};
                 processedAnswers.forEach(a => {
                     if (a && a.id) {
@@ -165,7 +166,7 @@ function ResultsSummary({ answers, savedResult, onBack }) {
 
                 const childName = savedResult?.childName || "your child";
                 const childAge = savedResult?.childAge || "young";
-                
+
                 // Prepare data for the Firebase function
                 const requestData = {
                     childName: childName,
@@ -174,7 +175,7 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                 };
 
                 console.log('Calling Firebase function generateOpenAISummary with:', requestData);
-                
+
                 const response = await fetch('http://localhost:5001/smiles-for-speech-1b81d/us-central1/generateOpenAISummary', {
                     method: 'POST',
                     headers: {
@@ -190,7 +191,7 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                 }
 
                 const summaryData = await response.json();
-                
+
                 console.log('AI summary result from Firebase function:', summaryData);
 
                 if (summaryData && summaryData.overallSummary) { // Check for the new expected structure
@@ -220,7 +221,7 @@ function ResultsSummary({ answers, savedResult, onBack }) {
         };
 
         fetchAiSummary();
-        
+
         const timeoutId = setTimeout(() => {
             if (loadingAiSummary) {
                 console.log('AI summary fetch timed out after 15 seconds'); // Increased timeout
@@ -228,9 +229,9 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                 setAiError('AI summary generation timed out. Using default recommendations.');
             }
         }, 15000); // Increased timeout to 15s
-        
+
         return () => clearTimeout(timeoutId);
-    // Ensure dependencies are correctly stringified if they are objects/arrays
+        // Ensure dependencies are correctly stringified if they are objects/arrays
     }, [JSON.stringify(processedAnswers), JSON.stringify(savedResult), riskLevel]); // Stringify complex dependencies
 
     const TabButton = ({ id, label, active }) => (
@@ -279,15 +280,15 @@ function ResultsSummary({ answers, savedResult, onBack }) {
 
     // Get the summary text - from AI or fallback to default
     const summaryText = aiSummary?.overallSummary || getOverallSummary(totalCounts);
-    
+
     // Console log to debug AI summary
-    console.log('AI Summary Status:', { 
-        aiSummaryReceived: !!aiSummary, 
-        summaryText, 
-        loadingStatus: loadingAiSummary, 
-        error: aiError 
+    console.log('AI Summary Status:', {
+        aiSummaryReceived: !!aiSummary,
+        summaryText,
+        loadingStatus: loadingAiSummary,
+        error: aiError
     });
-    
+
     return (
         <div style={{ maxWidth: '44rem', margin: '2rem auto', padding: '0 1rem' }}>
             <h1 style={{ fontSize: '1.5rem', textAlign: 'center', fontWeight: 600, color: '#333', marginBottom: '2rem' }}>Assessment Results</h1>
@@ -374,7 +375,7 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                         </span>
                     </div>
                 )}
-                
+
                 {/* AI Generation Status Indicator */}
                 <div style={{
                     marginTop: '1rem',
@@ -387,12 +388,12 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                     alignItems: 'center',
                     gap: '0.5rem'
                 }}>
-                    <strong>AI Status:</strong> 
-                    {loadingAiSummary ? 'Generating personalized summary...' : 
-                     aiSummary ? 'Personalized assessment completed' : 
-                     aiError ? 'Error: Using default content' : 'Using default content'}
+                    <strong>AI Status:</strong>
+                    {loadingAiSummary ? 'Generating personalized summary...' :
+                        aiSummary ? 'Personalized assessment completed' :
+                            aiError ? 'Error: Using default content' : 'Using default content'}
                 </div>
-                
+
                 {aiSummary?.note && (
                     <div style={{
                         marginTop: '1rem',
@@ -405,7 +406,7 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                         <strong>Note:</strong> {aiSummary.note}
                     </div>
                 )}
-                
+
                 {aiError && (
                     <div style={{
                         marginTop: '1rem',
@@ -415,89 +416,8 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                         fontSize: '0.9rem',
                         color: '#c62828'
                     }}>
-                        {aiError}
+                        <strong>Error:</strong> {aiError}
                     </div>
-                )}
-                
-                {/* Button to force refresh AI content */}
-                {!loadingAiSummary && (
-                    <button 
-                        onClick={async () => {
-                            console.log('Manually refreshing AI content');
-                            setLoadingAiSummary(true);
-                            setAiError(null);
-                            setAiSummary(null);
-                            
-                            try {
-                                const formattedAnswers = {};
-                                processedAnswers.forEach(a => {
-                                    if (a && a.id) {
-                                        const id = a.id.toString().startsWith('q') ? a.id : `q${a.id}`;
-                                        formattedAnswers[id] = a.answer;
-                                    }
-                                });
-
-                                const childName = savedResult?.childName || "your child";
-                                const childAge = savedResult?.childAge || "young";
-                                
-                                const requestData = {
-                                    childName: childName,
-                                    childAge: childAge,
-                                    assessmentData: formattedAnswers
-                                };
-
-                                console.log('Regenerate: Calling Firebase function with:', requestData);
-                                
-                                const response = await fetch('http://localhost:5001/smiles-for-speech-1b81d/us-central1/generateOpenAISummary', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify(requestData),
-                                });
-
-                                if (!response.ok) {
-                                    const errorData = await response.text();
-                                    console.error('Regenerate: Error response from Firebase function:', response.status, errorData);
-                                    throw new Error(`Network response was not ok: ${response.status} - ${errorData}`);
-                                }
-
-                                const summaryData = await response.json();
-                                console.log('Regenerate: Received new AI summary:', summaryData);
-
-                                if (summaryData && summaryData.overallSummary) {
-                                    setAiSummary(summaryData);
-                                } else if (summaryData && summaryData.rawSummary) {
-                                    setAiSummary({
-                                        overallSummary: "AI response might need review: " + summaryData.rawSummary,
-                                        positiveObservations: [],
-                                        areasForSupport: [],
-                                        recommendations: [summaryData.errorParsing || "Please check the raw summary."]
-                                    });
-                                    setAiError(summaryData.errorParsing || 'AI summary was not in the expected format.');
-                                } else {
-                                    setAiError('Unable to generate AI summary. Using default recommendations.');
-                                }
-                            } catch (error) {
-                                console.error('Error regenerating AI summary:', error);
-                                setAiError(`Error: ${error.message}`);
-                            } finally {
-                                setLoadingAiSummary(false);
-                            }
-                        }}
-                        style={{
-                            marginTop: '1rem',
-                            padding: '0.5rem 1rem',
-                            background: '#2196F3',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '0.25rem',
-                            cursor: 'pointer',
-                            fontSize: '0.9rem'
-                        }}
-                    >
-                        Regenerate AI Summary
-                    </button>
                 )}
             </div>
 
