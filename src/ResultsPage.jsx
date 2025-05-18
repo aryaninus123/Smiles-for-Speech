@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useHistory } from 'react-router-dom';
-import { screeningAPI, resourcesAPI } from './services/api';
+import { screeningAPI, resourcesAPI, profilesAPI } from './services/api';
 import ResultsSummary from './ResultsSummary';
 
 function ResultsPage() {
@@ -53,7 +53,7 @@ function ResultsPage() {
                 // Fetch recommendations based on risk level if available
                 if (assessmentData.riskLevel) {
                     try {
-                        const recommendationsResponse = await resourcesAPI.getResourcesByRiskLevel(assessmentData.riskLevel.toLowerCase());
+                        const recommendationsResponse = await resourcesAPI.getResourcesByRiskLevel(assessmentData.riskLevel);
                         if (recommendationsResponse && recommendationsResponse.data) {
                             setRecommendations(recommendationsResponse.data);
                         }
@@ -158,43 +158,6 @@ function ResultsPage() {
 
     return (
         <div className="sfs-root">
-            {childInfo && (
-                <div style={{ maxWidth: '44rem', margin: '0 auto', padding: '1rem 1rem 0' }}>
-                    <div style={{
-                        background: '#fff3e0',
-                        padding: '0.75rem 1rem',
-                        borderRadius: '0.5rem',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                    }}>
-                        <div>
-                            <h2 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>
-                                Assessment for {childInfo.name}
-                            </h2>
-                            <p style={{ fontSize: '0.9rem', color: '#666' }}>
-                                Completed on {new Date(assessment.createdAt).toLocaleDateString()}
-                            </p>
-                        </div>
-                        <button
-                            onClick={handleTakeNewAssessment}
-                            style={{
-                                background: '#f9c32b',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '0.5rem',
-                                padding: '0.5rem 1rem',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                                fontSize: '0.9rem'
-                            }}
-                        >
-                            Take New Assessment
-                        </button>
-                    </div>
-                </div>
-            )}
-
             <ResultsSummary
                 answers={answers}
                 savedResult={enhancedAssessment}
