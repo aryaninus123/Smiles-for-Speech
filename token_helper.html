@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Helper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .token-display {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #f9c32b;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Authentication Token Helper</h1>
+    <p>This page will help you get your authentication token from localStorage for API testing.</p>
+    
+    <div>
+        <button onclick="showToken()">Show Token</button>
+        <button onclick="copyToken()">Copy Token</button>
+    </div>
+    
+    <div class="token-display" id="tokenDisplay">Token will appear here...</div>
+    
+    <div id="copyConfirmation" style="color: green; display: none;">Token copied to clipboard!</div>
+    
+    <h2>Testing Instructions</h2>
+    <ol>
+        <li>Copy the token above</li>
+        <li>Open terminal and run: <code>cd /Users/aryangupta/Desktop/smiles_for_speech</code></li>
+        <li>Run: <code>node test_api.js YOUR_TOKEN</code> (replace YOUR_TOKEN with the copied token)</li>
+    </ol>
+
+    <script>
+        let token = '';
+        
+        function showToken() {
+            token = localStorage.getItem('token') || 'No token found in localStorage';
+            document.getElementById('tokenDisplay').textContent = token;
+        }
+        
+        function copyToken() {
+            if (!token) {
+                showToken();
+            }
+            
+            navigator.clipboard.writeText(token)
+                .then(() => {
+                    const confirmation = document.getElementById('copyConfirmation');
+                    confirmation.style.display = 'block';
+                    setTimeout(() => {
+                        confirmation.style.display = 'none';
+                    }, 3000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy: ', err);
+                    alert('Failed to copy token. Please copy it manually.');
+                });
+        }
+        
+        // Auto-show token on page load
+        window.onload = showToken;
+    </script>
+</body>
+</html> 
