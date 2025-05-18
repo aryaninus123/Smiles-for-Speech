@@ -9,11 +9,13 @@
 
 const functions = require("firebase-functions");
 const { OpenAI } = require("openai");
+const fetch = require('node-fetch');
+
 const path = require('path'); // Add path module
 require("dotenv").config({ path: path.resolve(__dirname, '.env') }); // Explicitly point to .env in the functions directory
 
 // Get the API key, prioritizing Firebase config, then .env file
-const apiKey = functions.config().openai?.key || process.env.OPENAI_API_KEY;
+const apiKey = (functions.config().openai && functions.config().openai.key) || process.env.OPENAI_API_KEY;
 
 if (!apiKey) {
   console.error("OpenAI API key is missing. Ensure it's set in Firebase config (openai.key) or in functions/.env (OPENAI_API_KEY).");
@@ -158,5 +160,25 @@ exports.generateOpenAISummary = functions.https.onRequest(async (request, respon
     } else {
       response.status(500).send(`Error generating summary: ${error.message}`);
     }
+  }
+});
+
+exports.getNearbyPlaces = functions.https.onRequest(async (req, res) => {
+  const { lat, lng, keyword } = req.query;
+  const apiKey = functions.config().openai?.key || process.env.OPENAI_API_KEY;
+
+  if (!lat || !lng || !keyword) {
+    return res.status(400).json({ error: 'Missing parameters' });
+  }
+
+  const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=10000&keyword=${encodeURIComponent(keyword)}&key=${apiKey}`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    return res.status(200).json(data);
+  } catch (error) {
+    console.error('Google Places Error:', error);
+    return res.status(500).json({ error: error.message });
   }
 });
