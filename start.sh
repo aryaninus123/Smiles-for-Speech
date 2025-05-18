@@ -1,38 +1,63 @@
 #!/bin/bash
 
-# Get the absolute path to the project root directory
-PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# This script starts both the backend and frontend servers for the Smiles for Speech app
 
-# Kill any processes running on ports 3000, 3001, and 5001
-kill_ports() {
-  lsof -i :$1 | grep LISTEN | awk '{print $2}' | xargs kill -9 2>/dev/null || true
-}
+# Print header
+echo "========================================================"
+echo "           Smiles for Speech - Startup Script           "
+echo "========================================================"
 
-echo "Killing any processes using ports 3000, 3001, and 5001..."
-kill_ports 3000
-kill_ports 3001
-kill_ports 5001
+# Kill existing processes on ports 3000 (frontend) and 5002 (backend)
+echo "Checking for existing processes..."
 
-# Forcefully kill to ensure ports are free
-echo "Ensuring ports are free..."
-sleep 1
-
-# Start backend server
-echo "Starting backend server..."
-cd "$PROJECT_ROOT/backend" && PORT=5001 node src/server.js &
-BACKEND_PID=$!
-
-# Wait for backend to start
-sleep 2
-
-# Start frontend on port 3000 or fallback to 3001
-echo "Starting frontend..."
-if lsof -i:3000 > /dev/null; then
-  echo "Port 3000 is busy, trying port 3001..."
-  cd "$PROJECT_ROOT" && PORT=3001 npm start
+# Find and kill process on port 3000 (frontend)
+PID_3000=$(lsof -ti:3000)
+if [ -n "$PID_3000" ]; then
+  echo "Killing process on port 3000 (PID: $PID_3000)"
+  kill -9 $PID_3000
 else
-  cd "$PROJECT_ROOT" && npm start
+  echo "No process found on port 3000"
 fi
 
-# When frontend exits, kill backend
-kill $BACKEND_PID 
+# Find and kill process on port 5002 (backend)
+PID_5002=$(lsof -ti:5002)
+if [ -n "$PID_5002" ]; then
+  echo "Killing process on port 5002 (PID: $PID_5002)"
+  kill -9 $PID_5002
+else
+  echo "No process found on port 5002"
+fi
+
+echo "All conflicting processes terminated"
+echo "========================================================"
+
+# Start backend server
+echo "Starting backend server on port 5002..."
+cd backend
+PORT=5002 node src/server.js &
+BACKEND_PID=$!
+cd ..
+
+echo "Backend server started with PID: $BACKEND_PID"
+echo "========================================================"
+
+# Wait a bit for backend to initialize
+sleep 2
+
+# Start frontend dev server
+echo "Starting frontend development server on port 3000..."
+npm start &
+FRONTEND_PID=$!
+
+echo "Frontend server started with PID: $FRONTEND_PID"
+echo "========================================================"
+echo ""
+echo "Both servers are now running!"
+echo "- Backend: http://localhost:5002"
+echo "- Frontend: http://localhost:3000"
+echo ""
+echo "Press Ctrl+C to stop both servers"
+
+# Wait for user to press Ctrl+C
+trap "kill $BACKEND_PID $FRONTEND_PID; echo 'Shutting down servers...'; exit" INT
+wait 
