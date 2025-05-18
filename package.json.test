@@ -1,0 +1,13 @@
+{
+  "name": "api-tester",
+  "version": "1.0.0",
+  "description": "API test helper for Smiles for Speech",
+  "main": "test_api.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test_api.js"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+} 

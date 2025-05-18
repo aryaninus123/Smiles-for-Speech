@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { authAPI, uploadAPI, profilesAPI, screeningAPI } from './services/api';
 import { logout, getUser } from './utils/auth';
-import './ProfilePage.css';
-import ChildProfile from './components/ChildProfile';
 
 function ProfilePage() {
     const history = useHistory();
@@ -83,18 +81,18 @@ function ProfilePage() {
             const hasTest = selectedChild.testResults && selectedChild.testResults.length > 0;
             setTestResult(hasTest ? "Test results found" : "No test result available.");
             setSummary("No Summary Available");
-
+            
             // Fetch assessment results for the selected child
             if (selectedChild.id) {
                 const fetchAssessments = async () => {
                     try {
                         const assessmentsResponse = await screeningAPI.getScreeningsByProfile(selectedChild.id);
-
+                        
                         if (assessmentsResponse && assessmentsResponse.data && assessmentsResponse.data.length > 0) {
                             // Set test result if available
                             const latestAssessment = assessmentsResponse.data[0]; // Assuming sorted by date
                             setTestResult(`Risk Level: ${latestAssessment.riskLevel || 'Unknown'} (${new Date(latestAssessment.createdAt).toLocaleDateString()})`);
-
+                            
                             // Set summary if available
                             if (latestAssessment.recommendations && latestAssessment.recommendations.length > 0) {
                                 setSummary(`${latestAssessment.recommendations[0]}`);
@@ -104,7 +102,7 @@ function ProfilePage() {
                         console.error('Error fetching assessments:', error);
                     }
                 };
-
+                
                 fetchAssessments();
             }
         }
@@ -219,7 +217,6 @@ function ProfilePage() {
 
     const handleAddChild = async (e) => {
         e.preventDefault();
-        
         if (!childName || !childAge) {
             setSidebarError("Child's name and age are required");
             setSidebarSuccess('');
@@ -229,21 +226,16 @@ function ProfilePage() {
         try {
             setSidebarError('');
             setLoading(true);
-
-            // Calculate birthDate from age
-            const today = new Date();
-            const birthYear = today.getFullYear() - childAge;
-            const birthDate = new Date(birthYear, today.getMonth(), today.getDate()).toISOString().split('T')[0];
-
+            
             // Prepare child profile data
             const childProfileData = {
                 name: childName,
-                birthDate: birthDate
+                age: childAge
             };
-
+            
             // Call API to create child profile
             const response = await profilesAPI.createProfile(childProfileData);
-
+            
             if (response && response.data) {
                 // Add the new child to the list
                 const newChild = response.data;
@@ -255,7 +247,7 @@ function ProfilePage() {
                 setChildName('');
                 setChildAge('');
                 setSidebarSuccess('Child profile added successfully!');
-
+                
                 setTimeout(() => {
                     setSidebarSuccess('');
                 }, 3000);
@@ -284,18 +276,18 @@ function ProfilePage() {
             setLoading(true);
             // Call the API to delete the child profile
             await profilesAPI.deleteProfile(childId);
-
+            
             // Update local state
             const updatedChildren = childrenList.filter(child => child.id !== childId);
             setChildrenList(updatedChildren);
-
+            
             // If the deleted child was selected, clear the selection
             if (selectedChild && selectedChild.id === childId) {
                 setSelectedChild(null);
                 setTestResult('No test result available.');
                 setSummary('No summary available.');
             }
-
+            
             setSidebarSuccess('Child profile deleted successfully!');
             setTimeout(() => {
                 setSidebarSuccess('');
@@ -320,7 +312,7 @@ function ProfilePage() {
     const handleEditChild = (child) => {
         setEditChildName(child.name);
         setEditChildAge(child.age);
-        setEditChildPic(child.photoUrl || "");
+        setEditChildPic(child.photoUrl || `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAPFBMVEXk5ueutLepsLPo6uursbXJzc/p6+zj5ea2u76orrKvtbi0ubzZ3N3O0dPAxcfg4uPMz9HU19i8wcPDx8qKXtGiAAAFTElEQVR4nO2d3XqzIAyAhUD916L3f6+f1m7tVvtNINFg8x5tZ32fQAIoMcsEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQTghAJD1jWtnXJPP/54IgNzZQulSmxvTH6oYXX4WS+ivhTbqBa1r26cvCdCu6i0YXbdZ0o4A1rzV+5IcE3YE+z58T45lqo7g1Aa/JY5tgoqQF3qb382x7lNzBLcxft+O17QUYfQI4IIeklKsPSN4i6LKj/7Zm8n99RbHJpEw9gEBXNBpKIYLJqKYRwjOikf//r+J8ZsVuacbqCMNleI9TqGLGqMzhnVdBOdd6F/RlrFijiCoVMk320CBIahUxTWI0KKEcJqKbMdpdJb5QvdHq6wCI5qhKlgGMS/RBHkubWDAE+QZxB4xhCyDiDkLZxgGEVdQldzSKbTIhmZkFkSEPcVvmBn2SMuZB9od7fQDsMiDdKJjFUSCQarM5WirZ3C2TT/htYnyPcPfgrFHWz0BI74gr6J/IZiGUxAZGQLqmvQLTrtE/Go4YxhVRIpEw+sww1IIcqr5NKmUUzLF3d4/qPkYIp2T/obPuemlojFUR4t9Q2Vojhb7BmgElWHzLPH8hucfpefPNFTVgs9h1AdU/Pin96vwWbWdf+X9Absn3OdO34aMdsDnP8WgKYisTqI6CkNGqZQo1XA6Ef6AU32SJzOcBukHPF07/xNSgmHKa5BOhtezv6mA/rYJpwXNAnbRZ1XuF3BzDcO3vpA3+ny2909gbqE4hhD3LIPhLLyBNhPZvbZ3B+3tPYa18A7auSlXQayKwTPNLKDcuOB0xPYKDPFTkWsevQPRZ1J8Hji9I1KQ34r7hZhrwNwOZ97QxNx0drwn4QI0wQk1DcEsfKCWKdxVvxPSNUIp/knmAXT+nT+Ko3+0H96rcNb3m1fx7MBTJdeBJ7uFcWsc0wvgAsC4pROW0l2inbAmIBv/7GZmuhQH6API2rr8T0e6yuZJ+80A9LZeG62T3tik31XwxtwZcizKuTHkMjB1WdZde4Kmic/A5ZI3rr1ae21d08PlVHYfAaxw9G9CYRbJ+8ZdbTcMRV1XM3VdF0M32vtoTdZ0+u29s0OttJ5bz64UwinjaFMVY9vkqc3KKSxN21Xl+0L4Q3Vuv1tYl0pqnX6ms4XetFz7gdZVAgUEoJntfOUe4ZwsHd9FzqQ3Vv6xe41l0XJcqcKl6TZvlv7ClAW3BsqQW4X7ypApB8dmTgK4IX5wvqIVj33HtD2qSG4BqznxdIefL27Y4sahi0MdIdvUsDva8agGGbCtITmCY31MHD2O0uIdh/0rJDQ1VX5Zdxz3rR2QDbv6qXl9vudzqQtGm1Jv9LDXOsfvvB7VcZ8PDKD0mQ1VHPYQ9O+Yj4hR1IUD8rBnn3ho2m8oQMxbCFiKlL2ioSW5heeJqegED52CzxCtcGD3Kv8Wms9EYLyUhwaFIhSMBClevWEmiK/Iaogu4H7sg6ppQhQG8RUqivuTGOAJOg6FfgW0q0M0PQMRMEgXaeNf3SYDZ8PIMI0+wHgr/MgN7wYwpiLjCCqM6ydUDZLQiB6nDdNC8SDyig3jPPpFXGcC9O8BUBDVmgBY59E7Md/35Loe/UVEECEJwYggJjELZ4J71SaQSBeC02n4Da29CayJNA28SAhd2CQyC1Xw6pSmGSINQVuMhAZp4DClan9MgmkDDNmezqwS8sgtlXK/EPBhoaSmYVC/F7IO1jQEdHOlabpKh3+jzLQSTUiq4X2I+Ip/zU8rlaqAvkS21ElR+gqu3zbjjL+hIAiCIAiCIAiCIAiCsCf/AKrfVhSbvA+DAAAAAElFTkSuQmCC`);
         setEditChildPicFile(null);
         setEditingChild(child);
         setEditing(false);
@@ -401,9 +393,23 @@ function ProfilePage() {
         return (
             <div className="sfs-root" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
                 <div style={{ textAlign: 'center' }}>
-                    <div className="spinner"></div>
+                    <div style={{
+                        border: '4px solid #f3f3f3',
+                        borderTop: '4px solid #f9c32b',
+                        borderRadius: '50%',
+                        width: '50px',
+                        height: '50px',
+                        animation: 'spin 1s linear infinite',
+                        margin: '0 auto'
+                    }}></div>
                     <p style={{ marginTop: '1rem' }}>Loading your profile...</p>
                 </div>
+                <style jsx>{`
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `}</style>
             </div>
         );
     }
@@ -451,20 +457,20 @@ function ProfilePage() {
                     background: 'white',
                     boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
                     padding: '20px',
-                    paddingTop: '70px', 
+                    paddingTop: '70px', // Increased padding at the top even more
                     position: 'fixed',
                     left: 0,
-                    top: '60px', 
+                    top: '60px', // Directly below navbar
                     bottom: 0,
                     overflowY: 'auto',
-                    borderTop: 'none',
-                    zIndex: 90
+                    borderTop: 'none', // Remove top border to connect with navbar
+                    zIndex: 90 // Lower than navbar but above main content
                 }}>
                     <div
                         style={{
                             display: 'flex',
                             alignItems: 'center',
-                            marginBottom: '40px', 
+                            marginBottom: '40px', // Increased bottom margin further
                             cursor: 'pointer',
                             padding: '8px',
                             borderRadius: '4px',
@@ -588,22 +594,134 @@ function ProfilePage() {
                 <main className="sfs-hero" style={{
                     marginLeft: '250px',
                     width: 'calc(100% - 250px)',
-                    marginTop: '0',
+                    marginTop: '0', // Already accounted for with the parent div margin-top
                     minHeight: 'calc(100vh - 60px)',
                     alignItems: 'center',
                     padding: '20px'
                 }}>
                     <section style={{ maxWidth: '28rem', width: '100%', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '2rem', margin: '0 auto' }}>
                         {selectedChild ? (
-                            <ChildProfile
-                                selectedChild={selectedChild}
-                                testResult={testResult}
-                                summary={summary}
-                                editingChild={editingChild}
-                                onEditChild={handleEditChild}
-                                onSaveChild={handleSaveChild}
-                                onCancelEdit={handleCancelChildEdit}
-                            />
+                            <>
+                                {editingChild && editingChild.id === selectedChild.id ? (
+                                    <form onSubmit={handleSaveChild} style={{ textAlign: 'center' }}>
+                                        <h2 className="sfs-hero-title" style={{ fontSize: '2rem', marginBottom: '1.5rem' }}>Edit {editChildName}'s Profile</h2>
+                                        
+                                        <img 
+                                            src={editChildPic} 
+                                            alt="Child Profile preview" 
+                                            className="sfs-photo" 
+                                            style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }} 
+                                        />
+                                        
+                                        <div style={{ marginBottom: '1rem' }}>
+                                            <label htmlFor="childProfilePic" style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#111' }}>Profile Picture</label>
+                                            <input
+                                                type="file"
+                                                id="childProfilePic"
+                                                accept="image/*"
+                                                className="sfs-login-input"
+                                                style={{ width: '100%', marginBottom: '0.5rem' }}
+                                                onChange={handleChildPicChange}
+                                            />
+                                        </div>
+
+                                        <div style={{ marginBottom: '1rem' }}>
+                                            <label htmlFor="editChildName" style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#111' }}>Name</label>
+                                            <input
+                                                type="text"
+                                                id="editChildName"
+                                                className="sfs-login-input"
+                                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #ccc', fontSize: '1rem' }}
+                                                value={editChildName}
+                                                onChange={e => setEditChildName(e.target.value)}
+                                                required
+                                            />
+                                        </div>
+
+                                        <div style={{ marginBottom: '1.5rem' }}>
+                                            <label htmlFor="editChildAge" style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#111' }}>Age</label>
+                                            <input
+                                                type="number"
+                                                id="editChildAge"
+                                                className="sfs-login-input"
+                                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #ccc', fontSize: '1rem' }}
+                                                value={editChildAge}
+                                                onChange={e => setEditChildAge(e.target.value)}
+                                                min="1"
+                                                max="18"
+                                                required
+                                            />
+                                        </div>
+
+                                        <button type="submit" className="sfs-get-started-btn" style={{ marginRight: '1rem' }}>Save Changes</button>
+                                        <button 
+                                            type="button" 
+                                            className="sfs-link" 
+                                            style={{ 
+                                                background: 'none', 
+                                                border: 'none', 
+                                                color: '#f9c32b', 
+                                                fontWeight: 700, 
+                                                fontSize: '1rem', 
+                                                cursor: 'pointer' 
+                                            }} 
+                                            onClick={handleCancelChildEdit}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </form>
+                                ) : (
+                                    <>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                            <h2 className="sfs-hero-title" style={{ fontSize: '2rem', margin: 0 }}>{selectedChild.name}'s Profile</h2>
+                                            <button
+                                                onClick={() => handleEditChild(selectedChild)}
+                                                className="sfs-link"
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    color: '#f9c32b',
+                                                    fontWeight: 700,
+                                                    fontSize: '1rem',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                Edit Profile
+                                            </button>
+                                        </div>
+
+                                <div style={{ textAlign: 'center' }}>
+                                    <img
+                                        src={`https://api.dicebear.com/6.x/avataaars/svg?seed=${selectedChild.name}`}
+                                        alt="Child Profile"
+                                        className="sfs-photo"
+                                        style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }}
+                                    />
+                                    <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#111', marginBottom: '0.5rem' }}>{selectedChild.name}</div>
+                                    <div style={{ fontSize: '1.1rem', color: '#555', marginBottom: '1.5rem' }}>Age: {selectedChild.age}</div>
+                                
+                                    {/* Only show this button if there are no test results yet */}
+                                    {testResult === 'No test result available.' && (
+                                        <Link 
+                                            to={`/assessment/${selectedChild.id}`} 
+                                            className="sfs-get-started-btn" 
+                                            style={{ 
+                                                marginBottom: '1rem',
+                                                display: 'inline-block',
+                                                textDecoration: 'none',
+                                                background: '#f9c32b',
+                                                color: 'white',
+                                                padding: '0.75rem 1.5rem',
+                                                borderRadius: '0.5rem',
+                                                fontWeight: '600',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                            }}
+                                        >
+                                            Take Assessment
+                                        </Link>
+                                    )}
+                                </div>
+                            </>
                         ) : (
                             <>
                                 <h2 className="sfs-hero-title" style={{ fontSize: '2rem', marginBottom: '1.5rem' }}>Your Caregiver Profile</h2>
@@ -706,29 +824,34 @@ function ProfilePage() {
                             <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Test Result</h3>
                             <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{testResult}</div>
 
-                            {/* Assessment Button */}
-                            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                                <Link to="/assessment" style={{ textDecoration: 'none' }}>
-                                    <button
-                                        style={{
-                                            background: '#f9c32b',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '0.5rem',
-                                            padding: '0.75rem 1.5rem',
-                                            fontSize: '1rem',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                            transition: 'all 0.2s ease'
-                                        }}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e8b52a'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f9c32b'}
+                            {/* Assessment Button - Only show if there are already test results */}
+                            {selectedChild && testResult !== 'No test result available.' && (
+                                <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                                    <Link 
+                                        to={`/assessment/${selectedChild.id}`}
+                                        style={{ textDecoration: 'none' }}
                                     >
-                                        Take Assessment!
-                                    </button>
-                                </Link>
-                            </div>
+                                        <button
+                                            style={{
+                                                background: '#f9c32b',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '0.5rem',
+                                                padding: '0.75rem 1.5rem',
+                                                fontSize: '1rem',
+                                                fontWeight: '600',
+                                                cursor: 'pointer',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                                transition: 'all 0.2s ease'
+                                            }}
+                                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e8b52a'}
+                                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f9c32b'}
+                                        >
+                                            Take New Assessment
+                                        </button>
+                                    </Link>
+                                </div>
+                            )}
                         </section>
 
                         {/* Summary Section */}
@@ -739,8 +862,24 @@ function ProfilePage() {
                     </section>
                 </main>
             </div>
+
+            <style jsx>{`
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                .sfs-photo {
+                    width: 150px;
+                    height: 150px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                }
+                .sfs-navbar {
+                    position: static;
+                }
+            `}</style>
         </div>
     );
 }
 
-export default ProfilePage;
+export default ProfilePage; 
