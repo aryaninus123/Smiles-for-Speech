@@ -58,11 +58,36 @@ function ProfilePage() {
                     if (userData.data.profilePicture) setProfilePic(userData.data.profilePicture);
                 }
 
-                if (childrenList.length > 0) {
-                    const firstChild = childrenList[0];
-                    setSelectedChild(firstChild);
-                    const hasTest = firstChild.testResults && firstChild.testResults.length > 0;
-                    setTestResult(hasTest ? "Test results found" : "No test result available.");
+                // Fetch child profiles
+                const profilesResponse = await profilesAPI.getProfiles();
+                if (profilesResponse && profilesResponse.data) {
+                    // Process profiles and calculate age from birthDate
+                    const processedProfiles = profilesResponse.data.map(profile => {
+                        // Calculate age from birthDate if available
+                        let ageValue = 'N/A';
+                        if (profile.birthDate) {
+                            const birthDate = new Date(profile.birthDate);
+                            const today = new Date();
+                            ageValue = today.getFullYear() - birthDate.getFullYear();
+                            // Adjust age if birthday hasn't occurred yet this year
+                            if (today.getMonth() < birthDate.getMonth() || 
+                                (today.getMonth() === birthDate.getMonth() && 
+                                today.getDate() < birthDate.getDate())) {
+                                ageValue--;
+                            }
+                        }
+                        return {
+                            ...profile,
+                            age: ageValue
+                        };
+                    });
+                    
+                    setChildrenList(processedProfiles);
+                    
+                    if (processedProfiles.length > 0) {
+                        const firstChild = processedProfiles[0];
+                        setSelectedChild(firstChild);
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching user data:', error);
@@ -232,7 +257,7 @@ function ProfilePage() {
 
             // Calculate birthDate from age
             const today = new Date();
-            const birthYear = today.getFullYear() - childAge;
+            const birthYear = today.getFullYear() - parseInt(childAge, 10);
             const birthDate = new Date(birthYear, today.getMonth(), today.getDate()).toISOString().split('T')[0];
 
             // Prepare child profile data
@@ -241,12 +266,18 @@ function ProfilePage() {
                 birthDate: birthDate
             };
 
+            console.log('Creating child profile with data:', childProfileData);
+
             // Call API to create child profile
             const response = await profilesAPI.createProfile(childProfileData);
 
             if (response && response.data) {
-                // Add the new child to the list
-                const newChild = response.data;
+                // Calculate age for the newly created child
+                const newChild = {
+                    ...response.data,
+                    age: childAge // Set the age directly since we just calculated it
+                };
+                
                 const updatedChildren = [...childrenList, newChild];
                 setChildrenList(updatedChildren);
                 setSelectedChild(newChild);
@@ -318,8 +349,24 @@ function ProfilePage() {
     };
 
     const handleEditChild = (child) => {
+        // Calculate age from birthDate if available
+        let childAge = 'N/A';
+        if (child.birthDate) {
+            const birthDate = new Date(child.birthDate);
+            const today = new Date();
+            childAge = today.getFullYear() - birthDate.getFullYear();
+            // Adjust age if birthday hasn't occurred yet this year
+            if (today.getMonth() < birthDate.getMonth() || 
+                (today.getMonth() === birthDate.getMonth() && 
+                today.getDate() < birthDate.getDate())) {
+                childAge--;
+            }
+        } else if (child.age) {
+            childAge = child.age;
+        }
+        
         setEditChildName(child.name);
-        setEditChildAge(child.age);
+        setEditChildAge(childAge);
         setEditChildPic(child.photoUrl || "");
         setEditChildPicFile(null);
         setEditingChild(child);
@@ -338,42 +385,19 @@ function ProfilePage() {
         }
     };
 
-    const handleSaveChild = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-
+    const handleSaveChild = async (updatedChild) => {
         try {
-            let childPicUrl = editChildPic;
+            setLoading(true);
 
-            // Upload new profile picture if one was selected
-            if (editChildPicFile) {
-                try {
-                    const uploadResult = await uploadAPI.uploadFile(editChildPicFile, 'childProfile');
-                    if (uploadResult && uploadResult.data && uploadResult.data.url) {
-                        childPicUrl = uploadResult.data.url;
-                    }
-                } catch (uploadError) {
-                    console.error("Error uploading child's picture:", uploadError);
-                }
-            }
-
-            // Update child data
-            const updatedChild = {
-                ...editingChild,
-                name: editChildName,
-                age: editChildAge,
-                photoUrl: childPicUrl
-            };
-
-            // Update children list
+            // Update child in local state
             setChildrenList(prevList =>
                 prevList.map(child =>
-                    child.id === editingChild.id ? updatedChild : child
+                    child.id === updatedChild.id ? updatedChild : child
                 )
             );
 
             // Update selected child if this was the one being edited
-            if (selectedChild && selectedChild.id === editingChild.id) {
+            if (selectedChild && selectedChild.id === updatedChild.id) {
                 setSelectedChild(updatedChild);
             }
 
@@ -700,42 +724,6 @@ function ProfilePage() {
                                 )}
                             </>
                         )}
-
-                        {/* Test Result Section */}
-                        <section style={{ marginTop: '2.5rem', marginBottom: '1.5rem' }}>
-                            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Test Result</h3>
-                            <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{testResult}</div>
-
-                            {/* Assessment Button */}
-                            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                                <Link to="/assessment" style={{ textDecoration: 'none' }}>
-                                    <button
-                                        style={{
-                                            background: '#f9c32b',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '0.5rem',
-                                            padding: '0.75rem 1.5rem',
-                                            fontSize: '1rem',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                            transition: 'all 0.2s ease'
-                                        }}
-                                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e8b52a'}
-                                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f9c32b'}
-                                    >
-                                        Take Assessment!
-                                    </button>
-                                </Link>
-                            </div>
-                        </section>
-
-                        {/* Summary Section */}
-                        <section style={{ marginBottom: '0.5rem' }}>
-                            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Summary</h3>
-                            <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{summary}</div>
-                        </section>
                     </section>
                 </main>
             </div>

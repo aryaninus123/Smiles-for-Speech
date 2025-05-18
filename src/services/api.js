@@ -3,7 +3,7 @@
  */
 
 // The base URL for all API requests
-const API_URL = 'http://localhost:5001/api';
+const API_URL = 'http://localhost:5002/api';
 
 /**
  * Helper to make API requests with appropriate headers
