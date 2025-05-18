@@ -7,43 +7,63 @@ import { screeningAPI, profilesAPI } from './services/api';
 const FALLBACK_QUESTIONS = [
     {
         id: 1,
-        text: 'Does your child respond to their name being called?',
+        text: 'My child turns toward me when I call their name.',
     },
     {
         id: 2,
-        text: 'Does your child make eye contact when interacting with others?',
+        text: 'My child maintains eye contact during conversations or playtime.',
     },
     {
         id: 3,
-        text: 'Does your child use gestures (like pointing or waving) to communicate?',
+        text: 'My child uses gestures like pointing or waving to communicate wants or interests.',
     },
     {
         id: 4,
-        text: 'Does your child look at you when you talk?',
+        text: 'My child looks at me when I speak to them.',
     },
     {
         id: 5,
-        text: 'Does your child respond when you call their name?',
+        text: 'My child responds appropriately when their name is called.',
     },
     {
         id: 6,
-        text: 'Does your child watch or go near other children?',
+        text: 'My child shows interest in playing with or being near other children.',
     },
     {
         id: 7,
-        text: 'Does your child smile back when someone smiles?',
+        text: 'My child smiles back when someone smiles at them.',
     },
     {
         id: 8,
-        text: 'Does your child show you things just to share?',
+        text: 'My child brings or shows me objects just to share their interest (not only to get help).',
     },
     {
         id: 9,
-        text: 'Does your child point, wave, or nod?',
+        text: 'My child uses appropriate gestures in social situations (pointing, waving, nodding).',
     },
     {
         id: 10,
-        text: 'Does your child copy what others do?',
+        text: 'My child imitates actions or behaviors they observe in others.',
+    },
+    {
+        id: 11,
+        text: 'My child engages in pretend play (like feeding a doll or driving toy cars).',
+    },
+    {
+        id: 12,
+        text: 'My child responds to my facial expressions with appropriate emotions.',
+    },
+    {
+        id: 13,
+        text: 'My child shows concern when someone is hurt or upset.',
+    },
+    {
+        id: 14,
+        text: 'My child takes turns in games or conversations.',
+    },
+    {
+        id: 15,
+        text: 'My child attempts to comfort others who are distressed.',
     },
 ];
 
@@ -71,6 +91,12 @@ function AssessmentForm() {
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
+                // Temporarily force using fallback questions for testing
+                console.log("Using hardcoded fallback questions for testing");
+                setQuestions(FALLBACK_QUESTIONS);
+
+                // Original code (commented out for testing)
+                /*
                 const response = await screeningAPI.getQuestions();
                 if (response && response.data) {
                     setQuestions(response.data);
@@ -78,6 +104,7 @@ function AssessmentForm() {
                     // Fallback to hardcoded questions
                     setQuestions(FALLBACK_QUESTIONS);
                 }
+                */
             } catch (err) {
                 console.error('Error fetching questions:', err);
                 setError('Failed to load questions. Using default questions.');
@@ -188,7 +215,13 @@ function AssessmentForm() {
 
     return (
         <>
-            <h1 style={{ fontSize: '1.5rem', textAlign: 'center', fontWeight: 600, color: '#333', marginBottom: '2rem', marginTop: '2rem' }}>Questionnaire</h1>
+            <div style={{ maxWidth: '44rem', margin: '0 auto' }}>
+                <h1 style={{ fontSize: '1.8rem', textAlign: 'center', fontWeight: 700, color: '#333', marginBottom: '1rem', marginTop: '2rem' }}>Child Development Assessment</h1>
+
+                <p style={{ textAlign: 'center', color: '#666', fontSize: '1.1rem', marginBottom: '2rem', maxWidth: '38rem', margin: '0 auto 2rem' }}>
+                    Please rate how frequently your child displays these behaviors, selecting from "Always" to "Never" for each statement.
+                </p>
+            </div>
 
             {error && (
                 <div style={{
@@ -214,44 +247,52 @@ function AssessmentForm() {
 
                 <form onSubmit={(e) => e.preventDefault()}>
                     {questions.map((q, idx) => (
-                        <div key={q.id} style={{ marginBottom: '3rem' }}>
-                            <div style={{ fontWeight: 600, color: '#111', marginBottom: '0.75rem', fontSize: '1.1rem' }}>{idx + 1}. {q.text}</div>
-                            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                        <div key={q.id} style={{ marginBottom: '3rem', background: '#fafafa', padding: '1.5rem', borderRadius: '0.75rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                            <div style={{ fontWeight: 600, color: '#111', marginBottom: '1.25rem', fontSize: '1.1rem' }}>{idx + 1}. {q.text}</div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
                                 {CHOICES.map(choice => (
-                                    <label
+                                    <button
                                         key={choice.value}
+                                        type="button"
+                                        onClick={() => handleChange(q.id, choice.value)}
                                         style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
+                                            flex: '1 1 18%',
+                                            minWidth: '90px',
                                             cursor: 'pointer',
                                             fontWeight: 500,
                                             color: answers[q.id] === choice.value ? '#fff' : '#333',
-                                            background: answers[q.id] === choice.value ? choice.color : '#f6f6f6',
+                                            background: answers[q.id] === choice.value ? choice.color : '#fff',
                                             borderRadius: '0.5rem',
-                                            padding: '0.5rem 1rem',
-                                            border: answers[q.id] === choice.value ? `2px solid ${choice.color}` : '1px solid #ccc',
-                                            transition: 'all 0.2s'
+                                            padding: '0.75rem 0.5rem',
+                                            textAlign: 'center',
+                                            border: answers[q.id] === choice.value ? `2px solid ${choice.color}` : '1px solid #ddd',
+                                            transition: 'all 0.2s ease',
+                                            boxShadow: answers[q.id] === choice.value ? `0 2px 5px rgba(0,0,0,0.2)` : 'none'
                                         }}
+                                        onMouseOver={(e) => {
+                                            if (answers[q.id] !== choice.value) {
+                                                e.currentTarget.style.background = '#f5f5f5';
+                                                e.currentTarget.style.borderColor = '#ccc';
+                                            }
+                                        }}
+                                        onMouseOut={(e) => {
+                                            if (answers[q.id] !== choice.value) {
+                                                e.currentTarget.style.background = '#fff';
+                                                e.currentTarget.style.borderColor = '#ddd';
+                                            }
+                                        }}
+                                        aria-label={`Select ${choice.label} for question ${idx + 1}`}
                                     >
-                                        <input
-                                            type="radio"
-                                            name={`q_${q.id}`}
-                                            value={choice.value}
-                                            checked={answers[q.id] === choice.value}
-                                            onChange={() => handleChange(q.id, choice.value)}
-                                            style={{ marginRight: '0.5rem' }}
-                                            aria-label={`Select ${choice.label} for question ${q.text}`}
-                                        />
                                         {choice.label}
-                                    </label>
+                                    </button>
                                 ))}
                             </div>
                         </div>
                     ))}
 
                     {profileId && (
-                        <div style={{ marginBottom: '2rem' }}>
-                            <label htmlFor="notes" style={{ display: 'block', fontWeight: 600, marginBottom: '0.75rem' }}>
+                        <div style={{ marginBottom: '2rem', background: '#f9f9f9', padding: '1.5rem', borderRadius: '0.75rem' }}>
+                            <label htmlFor="notes" style={{ display: 'block', fontWeight: 600, marginBottom: '0.75rem', color: '#333' }}>
                                 Additional Notes (optional)
                             </label>
                             <textarea
@@ -260,19 +301,20 @@ function AssessmentForm() {
                                 onChange={(e) => setNotes(e.target.value)}
                                 style={{
                                     width: '100%',
-                                    minHeight: '100px',
-                                    padding: '0.75rem',
+                                    minHeight: '120px',
+                                    padding: '1rem',
                                     borderRadius: '0.5rem',
-                                    border: '1px solid #ccc',
+                                    border: '1px solid #ddd',
                                     fontFamily: 'inherit',
-                                    fontSize: '1rem'
+                                    fontSize: '1rem',
+                                    resize: 'vertical'
                                 }}
                                 placeholder="Add any additional observations or notes about your child's behavior..."
                             />
                         </div>
                     )}
 
-                    <div style={{ marginTop: '2rem', textAlign: 'center', display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ marginTop: '2.5rem', textAlign: 'center', display: 'flex', justifyContent: 'space-between' }}>
                         <button
                             onClick={handleBack}
                             style={{
@@ -286,26 +328,45 @@ function AssessmentForm() {
                                 cursor: 'pointer',
                                 transition: 'all 0.2s'
                             }}
+                            onMouseOver={(e) => {
+                                e.currentTarget.style.background = '#eee';
+                            }}
+                            onMouseOut={(e) => {
+                                e.currentTarget.style.background = '#f5f5f5';
+                            }}
                         >
-                            Cancel
+                            Back
                         </button>
 
                         <button
                             onClick={handleSubmit}
                             disabled={!isFormComplete || savingResult}
                             style={{
-                                background: isFormComplete ? '#4CAF50' : '#aaa',
-                                color: 'white',
-                                padding: '1rem 2rem',
+                                background: isFormComplete ? '#4CAF50' : '#e0e0e0',
+                                color: isFormComplete ? 'white' : '#999',
+                                padding: '1rem 2.5rem',
                                 borderRadius: '0.5rem',
                                 border: 'none',
                                 fontSize: '1.1rem',
                                 fontWeight: '600',
                                 cursor: isFormComplete ? 'pointer' : 'not-allowed',
-                                transition: 'all 0.2s'
+                                transition: 'all 0.2s',
+                                boxShadow: isFormComplete ? '0 2px 5px rgba(0,0,0,0.1)' : 'none'
+                            }}
+                            onMouseOver={(e) => {
+                                if (isFormComplete) {
+                                    e.currentTarget.style.background = '#45a049';
+                                    e.currentTarget.style.boxShadow = '0 3px 7px rgba(0,0,0,0.15)';
+                                }
+                            }}
+                            onMouseOut={(e) => {
+                                if (isFormComplete) {
+                                    e.currentTarget.style.background = '#4CAF50';
+                                    e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                                }
                             }}
                         >
-                            {savingResult ? 'Saving...' : 'Submit'}
+                            {savingResult ? 'Saving...' : 'Submit Assessment'}
                         </button>
                     </div>
                 </form>

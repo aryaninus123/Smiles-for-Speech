@@ -19,30 +19,30 @@ const RESPONSE_COLORS = {
 
 const getSummaryForGroup = (counts) => {
     const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
-    // Consider "always" and "often" as positive indicators
-    const positiveResponses = (counts.always || 0) + (counts.often || 0);
-    // Consider "never" and "rarely" as concerning indicators
-    const negativeResponses = (counts.never || 0) + (counts.rarely || 0);
+    // For autism screening, "never" and "rarely" are positive indicators (lower risk)
+    const positiveResponses = (counts.never || 0) + (counts.rarely || 0);
+    // "always" and "often" are concerning indicators (higher risk)
+    const concerningResponses = (counts.always || 0) + (counts.often || 0);
 
-    if (positiveResponses >= total / 2) return "Your child shows typical behaviors in this area.";
-    if (negativeResponses >= total / 2) return "Some behaviors may be delayed. Consider speaking to a specialist.";
-    return "Your child may be developing these skills. Keep observing.";
+    if (positiveResponses >= total / 2) return "Your child shows typical development in this area.";
+    if (concerningResponses >= total / 2) return "Some behaviors in this area may need further evaluation. Consider speaking to a specialist.";
+    return "Your child shows mixed patterns in this area. Continue to observe their development.";
 };
 
 const getOverallSummary = (totalCounts) => {
     const total = Object.values(totalCounts).reduce((sum, count) => sum + count, 0);
-    // Consider "always" and "often" as positive indicators
-    const positiveResponses = (totalCounts.always || 0) + (totalCounts.often || 0);
-    // Consider "never" and "rarely" as concerning indicators
-    const negativeResponses = (totalCounts.never || 0) + (totalCounts.rarely || 0);
+    // For autism screening, "never" and "rarely" are positive indicators (lower risk)
+    const positiveResponses = (totalCounts.never || 0) + (totalCounts.rarely || 0);
+    // "always" and "often" are concerning indicators (higher risk)
+    const concerningResponses = (totalCounts.always || 0) + (totalCounts.often || 0);
 
     if (positiveResponses >= total / 2) {
-        return "Your child shows many expected behaviors. Keep supporting their growth!";
+        return "Your child shows many typical social communication behaviors. Keep supporting their growth!";
     }
-    if (negativeResponses >= total / 2) {
-        return "The screening results indicate some tendencies that may suggest a delay in development. It's recommended to discuss these observations with a healthcare professional for further guidance.";
+    if (concerningResponses >= total / 2) {
+        return "The screening results indicate some behaviors that may suggest further evaluation is needed. It's recommended to discuss these observations with a healthcare professional for guidance.";
     }
-    return "You may want to continue observing your child's development.";
+    return "Your child shows some behaviors that may benefit from continued observation. Consider discussing the results with a developmental specialist.";
 };
 
 function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
@@ -94,18 +94,19 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
 
     // Get risk level and recommendations from saved result if available
     const riskLevel = savedResult?.riskLevel ||
-        ((totalCounts.always || 0) + (totalCounts.often || 0) >= total / 2 ? 'Low' :
-            (totalCounts.never || 0) + (totalCounts.rarely || 0) >= total / 2 ? 'High' : 'Medium');
+        ((totalCounts.never || 0) + (totalCounts.rarely || 0) >= total / 2 ? 'Low' :
+            (totalCounts.always || 0) + (totalCounts.often || 0) >= total / 2 ? 'High' : 'Medium');
 
-    // Get the recommendations from AI summary or fallback to default
-    const recommendations = aiSummary?.recommendations && Array.isArray(aiSummary.recommendations)
-        ? aiSummary.recommendations
-        : savedResult?.recommendations || [
-            'Discuss these results with your child\'s healthcare provider',
-            'Continue monitoring your child\'s development',
-            'Engage in face-to-face play activities that encourage social interaction',
-            'Create opportunities for communication through daily activities'
-        ];
+    // Get the summary text - from AI or fallback to default
+    const summaryText = aiSummary?.overallSummary || getOverallSummary(totalCounts);
+
+    // Get recommendations from AI or fall back to default recommendations
+    const recommendations = aiSummary?.recommendations || [
+        "Continue observing your child's behavior and note any changes over time.",
+        "Engage in regular play activities that encourage social interaction.",
+        "Consider scheduling a developmental screening with your pediatrician.",
+        "Look into local early intervention programs that can provide additional support if needed."
+    ];
 
     // Local speech therapy resources for the Near You tab
     const localResources = [
@@ -278,9 +279,6 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
         );
     };
 
-    // Get the summary text - from AI or fallback to default
-    const summaryText = aiSummary?.overallSummary || getOverallSummary(totalCounts);
-
     // Console log to debug AI summary
     console.log('AI Summary Status:', {
         aiSummaryReceived: !!aiSummary,
@@ -327,7 +325,8 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
                         justifyContent: 'center',
                         color: '#fff',
                         fontWeight: '600',
-                        fontSize: '1.2rem'
+                        fontSize: '1.2rem',
+                        minWidth: '4rem'
                     }}>
                         {riskLevel === 'Low' ? '✓' : riskLevel === 'Medium' ? '!' : '⚠️'}
                     </div>
@@ -490,24 +489,74 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
                             <strong>Important Note:</strong> This screening tool is not a diagnosis. It is designed to help identify potential areas that may need further evaluation.
                         </div>
 
-                        {aiSummary && aiSummary.positiveObservations && aiSummary.positiveObservations.length > 0 && (
+                        {aiSummary && aiSummary.positiveObservations && aiSummary.positiveObservations.length > 0 ? (
                             <>
                                 <h3 style={{ color: '#444', marginBottom: '1rem' }}>Positive Observations</h3>
-                                <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', marginBottom: '1.5rem' }}>
+                                <ul style={{ listStyle: 'none', padding: 0, marginBottom: '1.5rem' }}>
                                     {aiSummary.positiveObservations.map((item, index) => (
-                                        <li key={`pos-${index}`} style={{ marginBottom: '0.5rem' }}>{item}</li>
+                                        <li key={`pos-${index}`} style={{
+                                            marginBottom: '0.75rem',
+                                            paddingLeft: '1.5rem',
+                                            position: 'relative'
+                                        }}>
+                                            <span style={{ position: 'absolute', left: 0, color: '#4CAF50' }}>•</span>
+                                            {item}
+                                        </li>
                                     ))}
+                                </ul>
+                            </>
+                        ) : (
+                            <>
+                                <h3 style={{ color: '#444', marginBottom: '1rem' }}>Positive Observations</h3>
+                                <ul style={{ listStyle: 'none', padding: 0, marginBottom: '1.5rem' }}>
+                                    <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                                        <span style={{ position: 'absolute', left: 0, color: '#4CAF50' }}>•</span>
+                                        Shows a good foundation in responsive social behaviors
+                                    </li>
+                                    <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                                        <span style={{ position: 'absolute', left: 0, color: '#4CAF50' }}>•</span>
+                                        Demonstrates engagement in social interactions
+                                    </li>
+                                    <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                                        <span style={{ position: 'absolute', left: 0, color: '#4CAF50' }}>•</span>
+                                        Shows some interest in communication with others
+                                    </li>
                                 </ul>
                             </>
                         )}
 
-                        {aiSummary && aiSummary.areasForSupport && aiSummary.areasForSupport.length > 0 && (
+                        {aiSummary && aiSummary.areasForSupport && aiSummary.areasForSupport.length > 0 ? (
                             <>
                                 <h3 style={{ color: '#444', marginBottom: '1rem' }}>Areas for Support</h3>
-                                <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', marginBottom: '1.5rem' }}>
+                                <ul style={{ listStyle: 'none', padding: 0, marginBottom: '1.5rem' }}>
                                     {aiSummary.areasForSupport.map((item, index) => (
-                                        <li key={`sup-${index}`} style={{ marginBottom: '0.5rem' }}>{item}</li>
+                                        <li key={`sup-${index}`} style={{
+                                            marginBottom: '0.75rem',
+                                            paddingLeft: '1.5rem',
+                                            position: 'relative'
+                                        }}>
+                                            <span style={{ position: 'absolute', left: 0, color: '#FF9800' }}>•</span>
+                                            {item}
+                                        </li>
                                     ))}
+                                </ul>
+                            </>
+                        ) : (
+                            <>
+                                <h3 style={{ color: '#444', marginBottom: '1rem' }}>Areas for Support</h3>
+                                <ul style={{ listStyle: 'none', padding: 0, marginBottom: '1.5rem' }}>
+                                    <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                                        <span style={{ position: 'absolute', left: 0, color: '#FF9800' }}>•</span>
+                                        May benefit from activities that encourage eye contact
+                                    </li>
+                                    <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                                        <span style={{ position: 'absolute', left: 0, color: '#FF9800' }}>•</span>
+                                        Could use support with social gesture development
+                                    </li>
+                                    <li style={{ marginBottom: '0.75rem', paddingLeft: '1.5rem', position: 'relative' }}>
+                                        <span style={{ position: 'absolute', left: 0, color: '#FF9800' }}>•</span>
+                                        May need help with turn-taking in conversations
+                                    </li>
                                 </ul>
                             </>
                         )}
@@ -597,7 +646,7 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
             </div>
 
             {/* Privacy Note */}
-            <div style={{ 
+            <div style={{
                 marginTop: '1rem',
                 textAlign: 'center',
                 color: '#666',

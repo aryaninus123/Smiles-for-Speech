@@ -56,33 +56,84 @@ exports.generateOpenAISummary = functions.https.onRequest(async (request, respon
       return;
     }
 
-    // Constructing a more detailed prompt
-    let promptContent = `Generate a personalized summary and recommendations for a child named ${childName}, aged ${childAge}. \n`;
-    promptContent += "The child has undergone an autism screening with the following results:\n";
+    // Enhanced prompt for better analysis of assessment answers
+    let promptContent = `Generate a personalized summary and recommendations for a child named ${childName}, aged ${childAge}, based on an autism screening assessment. \n\n`;
 
-    // Assuming assessmentData is an object where keys are categories and values are scores/observations
-    // e.g., { "Social Interaction": "Shows good eye contact", "Communication": "Uses simple sentences" }
-    for (const [category, result] of Object.entries(assessmentData)) {
-      promptContent += `- ${category}: ${result}\n`;
+    promptContent += "The assessment uses a frequency scale (always, often, sometimes, rarely, never) for each statement about the child's behavior. ";
+    promptContent += "These statements are indicators of social communication and interaction skills typically assessed in autism screenings.\n\n";
+
+    promptContent += "Assessment Results:\n";
+
+    // Create a more organized view of the assessment data
+    // Group by response type to better analyze patterns
+    const responseGroups = {
+      always: [],
+      often: [],
+      sometimes: [],
+      rarely: [],
+      never: []
+    };
+
+    // Add all questions and responses
+    for (const [questionId, response] of Object.entries(assessmentData)) {
+      // Get the question number (strip 'q' prefix if present)
+      const qNum = questionId.replace('q', '');
+
+      // Add to appropriate response group
+      if (responseGroups[response]) {
+        responseGroups[response].push(qNum);
+      }
     }
 
-    promptContent += "\nBased on these results, provide: \n";
-    promptContent += "1. A brief overall summary of the child's current developmental status related to autism indicators.\n";
-    promptContent += "2. Two to three positive observations or strengths.\n";
-    promptContent += "3. Two to three areas where the child might need support or further observation.\n";
-    promptContent += "4. Actionable recommendations for parents or caregivers, such as activities to encourage development in specific areas, or suggestions to consult with a specialist if certain signs are strong. \n";
-    promptContent += "Keep the language clear, empathetic, and supportive. The summary should be suitable for parents with no prior medical expertise. Avoid definitive diagnoses. Focus on observations and recommendations for next steps. Format the output as a JSON object with keys 'overallSummary', 'positiveObservations', 'areasForSupport', and 'recommendations'. Ensure recommendations are practical and easy to understand.";
+    // Add the grouped responses to the prompt
+    for (const [response, questions] of Object.entries(responseGroups)) {
+      if (questions.length > 0) {
+        promptContent += `\n${response.toUpperCase()} responses for questions: ${questions.join(', ')}\n`;
+      }
+    }
 
+    // Add the full question text and response for context
+    promptContent += "\nDetailed responses:\n";
+    for (const [questionId, response] of Object.entries(assessmentData)) {
+      // Get the question number (strip 'q' prefix if present)
+      const qNum = questionId.replace('q', '');
+      promptContent += `Q${qNum}: Response: ${response}\n`;
+    }
+
+    promptContent += "\nThe questions assess behaviors like:\n";
+    promptContent += "- Responding to name and maintaining eye contact\n";
+    promptContent += "- Using gestures to communicate wants and interests\n";
+    promptContent += "- Social interaction with others\n";
+    promptContent += "- Imitation and pretend play\n";
+    promptContent += "- Turn-taking in conversations\n";
+    promptContent += "- Showing empathy and responding to others' emotions\n\n";
+
+    promptContent += "Based on these results, provide:\n";
+    promptContent += "1. A brief overall summary (2-3 sentences) of the child's current developmental status related to autism indicators.\n";
+    promptContent += "2. Three specific positive observations or strengths based directly on the 'always' and 'often' responses.\n";
+    promptContent += "3. Three specific areas where the child might need support based on the 'rarely' and 'never' responses.\n";
+    promptContent += "4. Four actionable recommendations for parents or caregivers that specifically address the areas of need identified.\n\n";
+
+    promptContent += "Use the child's name and age to personalize the response. Keep the language clear, empathetic, and supportive. ";
+    promptContent += "The summary should be suitable for parents with no prior medical expertise. ";
+    promptContent += "Avoid definitive diagnoses. Focus on observations and recommendations for next steps.\n\n";
+
+    promptContent += "Format the output as a JSON object with these exact keys:\n";
+    promptContent += "{\n";
+    promptContent += "  \"overallSummary\": \"[2-3 sentence summary]\",\n";
+    promptContent += "  \"positiveObservations\": [\"[strength 1]\", \"[strength 2]\", \"[strength 3]\"],\n";
+    promptContent += "  \"areasForSupport\": [\"[area 1]\", \"[area 2]\", \"[area 3]\"],\n";
+    promptContent += "  \"recommendations\": [\"[recommendation 1]\", \"[recommendation 2]\", \"[recommendation 3]\", \"[recommendation 4]\"]\n";
+    promptContent += "}";
 
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
-        { role: "system", content: "You are a helpful assistant for an autism screening application called Smiles for Speech. You provide personalized summaries based on screening results." },
+        { role: "system", content: "You are a helpful assistant for an autism screening application called Smiles for Speech. You provide personalized summaries based on screening results, with a focus on identifying both strengths and areas for support." },
         { role: "user", content: promptContent }
       ],
-      // Enforce JSON output if the model/API supports it directly, or instruct it in the prompt.
-      // For gpt-3.5-turbo, we ask for JSON in the prompt.
-      // For newer models like gpt-4-turbo-preview, you can use response_format: { type: "json_object" }
+      temperature: 0.7, // Slightly increased for more nuanced responses
+      max_tokens: 1000, // Ensure we have enough space for detailed responses
     });
 
     let summaryText = completion.choices[0].message.content;
@@ -90,12 +141,11 @@ exports.generateOpenAISummary = functions.https.onRequest(async (request, respon
 
     // Try to parse the response as JSON, if not, use the text directly under a generic key
     try {
-        summaryJson = JSON.parse(summaryText);
+      summaryJson = JSON.parse(summaryText);
     } catch (e) {
-        functions.logger.error("OpenAI response was not valid JSON:", summaryText, e);
-        // Fallback: if the model didn't return perfect JSON, wrap the text.
-        // Or, you could try to extract parts using regex, but that's more brittle.
-        summaryJson = { "rawSummary": summaryText, "errorParsing": "AI response was not in the expected JSON format." };
+      functions.logger.error("OpenAI response was not valid JSON:", summaryText, e);
+      // Fallback: if the model didn't return perfect JSON, wrap the text.
+      summaryJson = { "rawSummary": summaryText, "errorParsing": "AI response was not in the expected JSON format." };
     }
 
     response.status(200).send(summaryJson);
