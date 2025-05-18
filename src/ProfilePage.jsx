@@ -70,9 +70,9 @@ function ProfilePage() {
                             const today = new Date();
                             ageValue = today.getFullYear() - birthDate.getFullYear();
                             // Adjust age if birthday hasn't occurred yet this year
-                            if (today.getMonth() < birthDate.getMonth() || 
-                                (today.getMonth() === birthDate.getMonth() && 
-                                today.getDate() < birthDate.getDate())) {
+                            if (today.getMonth() < birthDate.getMonth() ||
+                                (today.getMonth() === birthDate.getMonth() &&
+                                    today.getDate() < birthDate.getDate())) {
                                 ageValue--;
                             }
                         }
@@ -81,9 +81,9 @@ function ProfilePage() {
                             age: ageValue
                         };
                     });
-                    
+
                     setChildrenList(processedProfiles);
-                    
+
                     if (processedProfiles.length > 0) {
                         const firstChild = processedProfiles[0];
                         setSelectedChild(firstChild);
@@ -244,7 +244,7 @@ function ProfilePage() {
 
     const handleAddChild = async (e) => {
         e.preventDefault();
-        
+
         if (!childName || !childAge) {
             setSidebarError("Child's name and age are required");
             setSidebarSuccess('');
@@ -277,7 +277,7 @@ function ProfilePage() {
                     ...response.data,
                     age: childAge // Set the age directly since we just calculated it
                 };
-                
+
                 const updatedChildren = [...childrenList, newChild];
                 setChildrenList(updatedChildren);
                 setSelectedChild(newChild);
@@ -356,15 +356,15 @@ function ProfilePage() {
             const today = new Date();
             childAge = today.getFullYear() - birthDate.getFullYear();
             // Adjust age if birthday hasn't occurred yet this year
-            if (today.getMonth() < birthDate.getMonth() || 
-                (today.getMonth() === birthDate.getMonth() && 
-                today.getDate() < birthDate.getDate())) {
+            if (today.getMonth() < birthDate.getMonth() ||
+                (today.getMonth() === birthDate.getMonth() &&
+                    today.getDate() < birthDate.getDate())) {
                 childAge--;
             }
         } else if (child.age) {
             childAge = child.age;
         }
-        
+
         setEditChildName(child.name);
         setEditChildAge(childAge);
         setEditChildPic(child.photoUrl || "");
@@ -475,10 +475,10 @@ function ProfilePage() {
                     background: 'white',
                     boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
                     padding: '20px',
-                    paddingTop: '70px', 
+                    paddingTop: '70px',
                     position: 'fixed',
                     left: 0,
-                    top: '60px', 
+                    top: '60px',
                     bottom: 0,
                     overflowY: 'auto',
                     borderTop: 'none',
@@ -488,7 +488,7 @@ function ProfilePage() {
                         style={{
                             display: 'flex',
                             alignItems: 'center',
-                            marginBottom: '40px', 
+                            marginBottom: '40px',
                             cursor: 'pointer',
                             padding: '8px',
                             borderRadius: '4px',
@@ -515,7 +515,7 @@ function ProfilePage() {
                         </div>
                     </div>
 
-                    <h3 style={{ fontSize: '1.1rem', marginBottom: '10px', color: '#f9c32b' }}>Add New Child</h3>
+                    {/* <h3 style={{ fontSize: '1.1rem', marginBottom: '10px', color: '#f9c32b' }}>Add New Child</h3> */}
 
                     {/* Add Child Form */}
                     <form onSubmit={handleAddChild}>

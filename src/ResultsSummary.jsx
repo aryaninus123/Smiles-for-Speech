@@ -15,6 +15,7 @@ const RESPONSE_COLORS = {
     never: '#f44336'      // Red
 };
 
+
 const getSummaryForGroup = (counts) => {
     const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
     // Consider "always" and "often" as positive indicators
@@ -44,6 +45,8 @@ const getOverallSummary = (totalCounts) => {
 };
 
 function ResultsSummary({ answers, savedResult, onBack }) {
+    const [location, setLocation] = useState(null);
+    const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState('summary');
     const categoryCounts = {};
     const totalCounts = { always: 0, often: 0, sometimes: 0, rarely: 0, never: 0 };
@@ -145,6 +148,29 @@ function ResultsSummary({ answers, savedResult, onBack }) {
             {label}
         </button>
     );
+    const getUserLocation = () => {
+        if (!navigator.geolocation) {
+            setError('Geolocation is not supported by your browser.');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setLocation({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                });
+                setError('');
+            },
+            (err) => {
+                if (err.code === 1) {
+                    setError('Permission denied. Please enable location access.');
+                } else {
+                    setError('Unable to retrieve your location.');
+                }
+            }
+        );
+    };
 
     return (
         <div style={{ maxWidth: '44rem', margin: '2rem auto', padding: '0 1rem' }}>
@@ -322,86 +348,29 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                 ) : (
                     // Near You Tab
                     <>
-                        <div style={{
-                            background: '#e3f2fd',
-                            padding: '1rem',
-                            borderRadius: '0.5rem',
-                            borderLeft: '4px solid #2196F3',
-                            marginBottom: '1.5rem'
-                        }}>
-                            <strong>Find Help Nearby:</strong> Below are speech therapy resources and specialists in your area who can provide professional evaluations and interventions.
-                        </div>
+                        <button
+                            onClick={getUserLocation}
+                            style={{
+                                padding: '10px 16px',
+                                backgroundColor: '#4caf50',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                marginTop: '1rem'
+                            }}
+                        >
+                            Find Resources Near Me
+                        </button>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                            <h3 style={{ color: '#444', margin: 0 }}>Speech Therapy Centers</h3>
-                            <button
-                                style={{
-                                    background: '#f9c32b',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '0.25rem',
-                                    padding: '0.35rem 0.75rem',
-                                    fontSize: '0.85rem',
-                                    cursor: 'pointer',
-                                    fontWeight: '600'
-                                }}
-                                onClick={() => window.open('https://maps.google.com/search?q=speech+therapy+near+me')}
-                            >
-                                View Map
-                            </button>
-                        </div>
+                        {location && (
+                            <p>
+                                Location: {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+                            </p>
+                        )}
 
-                        <div style={{ marginBottom: '2rem' }}>
-                            {localResources.map((resource, index) => (
-                                <div key={index} style={{
-                                    border: '1px solid #e0e0e0',
-                                    borderRadius: '0.5rem',
-                                    padding: '1rem',
-                                    marginBottom: '1rem'
-                                }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'flex-start' }}>
-                                        <h4 style={{ margin: 0, color: '#2196F3' }}>{resource.name}</h4>
-                                        <span style={{
-                                            background: '#e8f5e9',
-                                            color: '#2e7d32',
-                                            padding: '0.15rem 0.5rem',
-                                            borderRadius: '1rem',
-                                            fontSize: '0.75rem',
-                                            fontWeight: '600'
-                                        }}>
-                                            Open
-                                        </span>
-                                    </div>
-                                    <div style={{ color: '#666', marginBottom: '0.25rem' }}>
-                                        <i style={{ marginRight: '0.5rem' }}>📍</i> {resource.location}
-                                    </div>
-                                    <div style={{ color: '#666', marginBottom: '0.25rem' }}>
-                                        <i style={{ marginRight: '0.5rem' }}>📞</i> {resource.contact}
-                                    </div>
-                                    <div style={{ color: '#666', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                                        <strong>Services:</strong> {resource.services}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                            <p style={{ color: '#666', margin: '0' }}>Don't see a center near you?</p>
-                            <button
-                                style={{
-                                    background: 'transparent',
-                                    color: '#2196F3',
-                                    border: 'none',
-                                    padding: '0.5rem',
-                                    cursor: 'pointer',
-                                    fontWeight: '600',
-                                    textDecoration: 'underline'
-                                }}
-                                onClick={() => window.open('https://maps.google.com/search?q=speech+therapy+near+me')}
-                            >
-                                Search more locations
-                            </button>
-                        </div>
+                        {error && <p style={{ color: 'red' }}>{error}</p>}
                     </>
                 )}
             </div>

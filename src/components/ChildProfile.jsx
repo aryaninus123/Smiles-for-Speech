@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { uploadAPI, profilesAPI } from '../services/api';
 
-function ChildProfile({ 
-    selectedChild, 
-    testResult, 
-    summary, 
-    onEditChild, 
+function ChildProfile({
+    selectedChild,
+    testResult,
+    summary,
+    onEditChild,
     onSaveChild,
     onCancelEdit,
     editingChild
@@ -90,7 +90,7 @@ function ChildProfile({
             // Call the parent handler to update UI
             onSaveChild(updatedChild);
             setSuccess('Child profile updated successfully!');
-            
+
             setTimeout(() => {
                 setSuccess('');
             }, 3000);
@@ -130,14 +130,14 @@ function ChildProfile({
                         {success}
                     </div>
                 )}
-                
-                <img 
-                    src={editChildPic} 
-                    alt="Child Profile preview" 
-                    className="sfs-photo" 
-                    style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }} 
+
+                <img
+                    src={editChildPic}
+                    alt="Child Profile preview"
+                    className="sfs-photo"
+                    style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }}
                 />
-                
+
                 <div style={{ marginBottom: '1rem' }}>
                     <label htmlFor="childProfilePic" style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#111' }}>
                         Profile Picture
@@ -184,25 +184,25 @@ function ChildProfile({
                     />
                 </div>
 
-                <button 
-                    type="submit" 
-                    className="sfs-get-started-btn" 
+                <button
+                    type="submit"
+                    className="sfs-get-started-btn"
                     style={{ marginRight: '1rem' }}
                     disabled={loading}
                 >
                     {loading ? 'Saving...' : 'Save Changes'}
                 </button>
-                <button 
-                    type="button" 
-                    className="sfs-link" 
-                    style={{ 
-                        background: 'none', 
-                        border: 'none', 
-                        color: '#f9c32b', 
-                        fontWeight: 700, 
-                        fontSize: '1rem', 
-                        cursor: 'pointer' 
-                    }} 
+                <button
+                    type="button"
+                    className="sfs-link"
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#f9c32b',
+                        fontWeight: 700,
+                        fontSize: '1rem',
+                        cursor: 'pointer'
+                    }}
                     onClick={onCancelEdit}
                 >
                     Cancel
@@ -238,12 +238,12 @@ function ChildProfile({
                     src={avatarUrl}
                     alt="Child Profile"
                     className="sfs-photo"
-                    style={{ 
-                        width: '150px', 
-                        height: '150px', 
-                        borderRadius: '50%', 
-                        objectFit: 'cover', 
-                        marginBottom: '1.5rem' 
+                    style={{
+                        width: '150px',
+                        height: '150px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        marginBottom: '1.5rem'
                     }}
                 />
                 <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#111', marginBottom: '0.5rem' }}>
@@ -288,6 +288,12 @@ function ChildProfile({
             <section style={{ marginBottom: '0.5rem' }}>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Summary</h3>
                 <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{summary}</div>
+            </section>
+
+            {/* Next steps Section */}
+            <section style={{ marginBottom: '0.5rem' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem', marginTop: '2rem' }}>Next Steps</h3>
+                <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>Coming soon</div>
             </section>
         </>
     );
