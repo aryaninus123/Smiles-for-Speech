@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+can import React, { useState, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { authAPI, uploadAPI, profilesAPI, screeningAPI } from './services/api';
 import { logout, getUser } from './utils/auth';
