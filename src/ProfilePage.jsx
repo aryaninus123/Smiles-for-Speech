@@ -4,6 +4,7 @@ import { authAPI, uploadAPI, profilesAPI, screeningAPI } from './services/api';
 import { logout, getUser } from './utils/auth';
 import './ProfilePage.css';
 import ChildProfile from './components/ChildProfile';
+import { FaPen } from 'react-icons/fa';
 
 function ProfilePage() {
     const history = useHistory();
@@ -531,17 +532,76 @@ function ProfilePage() {
                             </div>
                         )}
 
-                        <div style={{ marginBottom: '10px' }}>
-                            <label htmlFor="childName" style={{ display: 'block', marginBottom: '5px', fontWeight: '600' }}>Child's Name *</label>
-                            <input
-                                type="text"
-                                id="childName"
-                                value={childName}
-                                onChange={(e) => setChildName(e.target.value)}
-                                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                                placeholder="Enter child's name"
-                                required
-                            />
+                        <div style={{ marginBottom: '15px' }}>
+                            <label htmlFor="childName" style={{
+                                display: 'block',
+                                marginBottom: '8px',
+                                fontWeight: '600',
+                                color: '#333'
+                            }}>Child's Name *</label>
+                            <div style={{
+                                position: 'relative'
+                            }}>
+                                <input
+                                    type="text"
+                                    id="childName"
+                                    value={childName}
+                                    onChange={(e) => setChildName(e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px 15px',
+                                        paddingLeft: '40px',
+                                        borderRadius: '8px',
+                                        border: '2px solid #eee',
+                                        fontSize: '0.95rem',
+                                        backgroundColor: '#fff',
+                                        transition: 'all 0.3s ease',
+                                        boxSizing: 'border-box',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                                        outline: 'none'
+                                    }}
+                                    placeholder="Enter child's name"
+                                    required
+                                    onFocus={(e) => {
+                                        e.target.style.borderColor = '#f9c32b';
+                                        e.target.style.boxShadow = '0 0 0 3px rgba(249, 195, 43, 0.2)';
+                                    }}
+                                    onBlur={(e) => {
+                                        e.target.style.borderColor = '#eee';
+                                        e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                                    }}
+                                />
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="#f9c32b"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    style={{
+                                        position: 'absolute',
+                                        left: '14px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)'
+                                    }}
+                                >
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            {childName && (
+                                <div style={{
+                                    fontSize: '0.8rem',
+                                    color: '#666',
+                                    marginTop: '6px',
+                                    paddingLeft: '15px'
+                                }}>
+                                    Creating profile for {childName}
+                                </div>
+                            )}
                         </div>
 
                         <div style={{ marginBottom: '15px' }}>
@@ -674,52 +734,257 @@ function ProfilePage() {
                                         <img src={profilePic} alt="Profile" className="sfs-photo" style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }} />
                                         <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#111', marginBottom: '0.5rem' }}>{name}</div>
                                         <div style={{ fontSize: '1.1rem', color: '#555', marginBottom: '1.5rem' }}>Age: {age}</div>
-                                        <button className="sfs-get-started-btn" style={{ marginBottom: '0rem' }} onClick={handleEdit}>Edit Profile</button>
+                                        <button className="sfs-get-started-btn" style={{ marginBottom: '0rem' }} onClick={handleEdit}><FaPen /></button>
                                     </div>
                                 ) : (
                                     <form onSubmit={handleSave} style={{ textAlign: 'center' }}>
                                         <img src={editProfilePic} alt="Profile preview" className="sfs-photo" style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }} />
-                                        <div style={{ marginBottom: '1rem' }}>
-                                            <label htmlFor="profilePic" style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#111' }}>Profile Picture</label>
-                                            <input
-                                                type="file"
-                                                id="profilePic"
-                                                name="profilePic"
-                                                accept="image/*"
-                                                className="sfs-login-input"
-                                                style={{ width: '100%', marginBottom: '0.5rem' }}
-                                                onChange={handleProfilePicChange}
-                                            />
-                                        </div>
-                                        <div style={{ marginBottom: '1rem' }}>
-                                            <label htmlFor="editName" style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#111' }}>Name</label>
-                                            <input
-                                                type="text"
-                                                id="editName"
-                                                name="editName"
-                                                className="sfs-login-input"
-                                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #ccc', fontSize: '1rem' }}
-                                                value={editName}
-                                                onChange={e => setEditName(e.target.value)}
-                                                required
-                                            />
+                                        <div style={{ marginBottom: '1.5rem' }}>
+                                            <label htmlFor="profilePic" style={{ display: 'block', fontWeight: 600, marginBottom: '0.75rem', color: '#111' }}>Profile Picture</label>
+                                            <div style={{
+                                                border: '2px dashed #f9c32b',
+                                                borderRadius: '0.5rem',
+                                                padding: '1.25rem',
+                                                backgroundColor: '#fffaf0',
+                                                textAlign: 'center',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease'
+                                            }}>
+                                                <label htmlFor="profilePic" style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    cursor: 'pointer'
+                                                }}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#f9c32b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h7"></path>
+                                                        <path d="M16 5h6v6"></path>
+                                                        <path d="M8 12l8-8v8h-8z"></path>
+                                                    </svg>
+                                                    <span style={{
+                                                        marginTop: '0.75rem',
+                                                        fontSize: '0.9rem',
+                                                        fontWeight: 500,
+                                                        color: '#666'
+                                                    }}>
+                                                        Choose a new photo or drag it here
+                                                    </span>
+                                                    <span style={{
+                                                        fontSize: '0.8rem',
+                                                        color: '#888',
+                                                        marginTop: '0.5rem'
+                                                    }}>
+                                                        JPG, PNG or GIF (max. 5MB)
+                                                    </span>
+                                                </label>
+                                                <input
+                                                    type="file"
+                                                    id="profilePic"
+                                                    name="profilePic"
+                                                    accept="image/*"
+                                                    style={{
+                                                        width: '0.1px',
+                                                        height: '0.1px',
+                                                        opacity: 0,
+                                                        overflow: 'hidden',
+                                                        position: 'absolute',
+                                                        zIndex: '-1'
+                                                    }}
+                                                    onChange={handleProfilePicChange}
+                                                />
+                                            </div>
+                                            {editProfileFile && (
+                                                <div style={{
+                                                    marginTop: '0.75rem',
+                                                    fontSize: '0.85rem',
+                                                    color: '#4CAF50',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.5rem'
+                                                }}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+                                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                                    </svg>
+                                                    <span>File selected: {editProfileFile.name}</span>
+                                                </div>
+                                            )}
                                         </div>
                                         <div style={{ marginBottom: '1.5rem' }}>
-                                            <label htmlFor="editAge" style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#111' }}>Age</label>
-                                            <input
-                                                type="number"
-                                                id="editAge"
-                                                name="editAge"
-                                                className="sfs-login-input"
-                                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #ccc', fontSize: '1rem' }}
-                                                value={editAge}
-                                                onChange={e => setEditAge(e.target.value)}
-                                                min="0"
-                                                required
-                                            />
+                                            <label htmlFor="editName" style={{ display: 'block', fontWeight: 600, marginBottom: '0.75rem', color: '#111' }}>Name</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <input
+                                                    type="text"
+                                                    id="editName"
+                                                    name="editName"
+                                                    style={{
+                                                        width: '100%',
+                                                        padding: '0.85rem 1rem',
+                                                        paddingLeft: '3rem',
+                                                        borderRadius: '0.75rem',
+                                                        border: '2px solid #eee',
+                                                        fontSize: '1rem',
+                                                        backgroundColor: '#fff',
+                                                        transition: 'all 0.3s ease',
+                                                        boxSizing: 'border-box',
+                                                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                                                        outline: 'none'
+                                                    }}
+                                                    value={editName}
+                                                    onChange={e => setEditName(e.target.value)}
+                                                    onFocus={(e) => {
+                                                        e.target.style.borderColor = '#f9c32b';
+                                                        e.target.style.boxShadow = '0 0 0 3px rgba(249, 195, 43, 0.2)';
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        e.target.style.borderColor = '#eee';
+                                                        e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                                                    }}
+                                                    required
+                                                />
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="#f9c32b"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    style={{
+                                                        position: 'absolute',
+                                                        left: '1rem',
+                                                        top: '50%',
+                                                        transform: 'translateY(-50%)'
+                                                    }}
+                                                >
+                                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                                    <circle cx="12" cy="7" r="4"></circle>
+                                                </svg>
+                                            </div>
                                         </div>
-                                        <button type="submit" className="sfs-get-started-btn" style={{ marginRight: '1rem' }}>Save</button>
-                                        <button type="button" className="sfs-link" style={{ background: 'none', border: 'none', color: '#f9c32b', fontWeight: 700, fontSize: '1rem', cursor: 'pointer' }} onClick={() => setEditing(false)}>Cancel</button>
+                                        <div style={{ marginBottom: '1.5rem' }}>
+                                            <label htmlFor="editAge" style={{ display: 'block', fontWeight: 600, marginBottom: '0.75rem', color: '#111' }}>Age</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <input
+                                                    type="number"
+                                                    id="editAge"
+                                                    name="editAge"
+                                                    style={{
+                                                        width: '100%',
+                                                        padding: '0.85rem 1rem',
+                                                        paddingLeft: '3rem',
+                                                        borderRadius: '0.75rem',
+                                                        border: '2px solid #eee',
+                                                        fontSize: '1rem',
+                                                        backgroundColor: '#fff',
+                                                        transition: 'all 0.3s ease',
+                                                        boxSizing: 'border-box',
+                                                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                                                        outline: 'none',
+                                                        appearance: 'textfield'
+                                                    }}
+                                                    value={editAge}
+                                                    onChange={e => setEditAge(e.target.value)}
+                                                    onFocus={(e) => {
+                                                        e.target.style.borderColor = '#f9c32b';
+                                                        e.target.style.boxShadow = '0 0 0 3px rgba(249, 195, 43, 0.2)';
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        e.target.style.borderColor = '#eee';
+                                                        e.target.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                                                    }}
+                                                    min="0"
+                                                    required
+                                                />
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="#f9c32b"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    style={{
+                                                        position: 'absolute',
+                                                        left: '1rem',
+                                                        top: '50%',
+                                                        transform: 'translateY(-50%)'
+                                                    }}
+                                                >
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <path d="M12 6v6l4 2"></path>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
+                                            <button
+                                                type="submit"
+                                                style={{
+                                                    padding: '0.85rem 2rem',
+                                                    background: '#f9c32b',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '0.75rem',
+                                                    fontSize: '1rem',
+                                                    fontWeight: '600',
+                                                    cursor: 'pointer',
+                                                    boxShadow: '0 2px 4px rgba(249, 195, 43, 0.3)',
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                                onMouseOver={(e) => {
+                                                    e.target.style.transform = 'translateY(-2px)';
+                                                    e.target.style.boxShadow = '0 4px 8px rgba(249, 195, 43, 0.4)';
+                                                }}
+                                                onMouseOut={(e) => {
+                                                    e.target.style.transform = 'translateY(0)';
+                                                    e.target.style.boxShadow = '0 2px 4px rgba(249, 195, 43, 0.3)';
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                        <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
+                                                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                                        <polyline points="7 3 7 8 15 8"></polyline>
+                                                    </svg>
+                                                    Save Changes
+                                                </div>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                style={{
+                                                    padding: '0.85rem 2rem',
+                                                    background: 'transparent',
+                                                    color: '#666',
+                                                    border: '2px solid #eee',
+                                                    borderRadius: '0.75rem',
+                                                    fontSize: '1rem',
+                                                    fontWeight: '600',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                                onClick={() => setEditing(false)}
+                                                onMouseOver={(e) => {
+                                                    e.target.style.borderColor = '#ddd';
+                                                    e.target.style.color = '#333';
+                                                }}
+                                                onMouseOut={(e) => {
+                                                    e.target.style.borderColor = '#eee';
+                                                    e.target.style.color = '#666';
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                    </svg>
+                                                    Cancel
+                                                </div>
+                                            </button>
+                                        </div>
                                     </form>
                                 )}
                             </>

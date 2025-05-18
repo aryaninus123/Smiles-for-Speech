@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { uploadAPI, profilesAPI } from '../services/api';
+import { FaPen } from 'react-icons/fa';
 
 function ChildProfile({
     selectedChild,
@@ -142,14 +143,58 @@ function ChildProfile({
                     <label htmlFor="childProfilePic" style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#111' }}>
                         Profile Picture
                     </label>
-                    <input
-                        type="file"
-                        id="childProfilePic"
-                        accept="image/*"
-                        className="sfs-login-input"
-                        style={{ width: '100%', marginBottom: '0.5rem' }}
-                        onChange={handleChildPicChange}
-                    />
+                    <div style={{
+                        border: '2px dashed #f9c32b',
+                        borderRadius: '0.5rem',
+                        padding: '1.25rem',
+                        backgroundColor: '#fffaf0',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                    }}>
+                        <label htmlFor="childProfilePic" style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            cursor: 'pointer'
+                        }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#f9c32b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h7"></path>
+                                <path d="M16 5h6v6"></path>
+                                <path d="M8 12l8-8v8h-8z"></path>
+                            </svg>
+                            <span style={{
+                                marginTop: '0.75rem',
+                                fontSize: '0.9rem',
+                                fontWeight: 500,
+                                color: '#666'
+                            }}>
+                                Choose a new photo or drag it here
+                            </span>
+                            <span style={{
+                                fontSize: '0.8rem',
+                                color: '#888',
+                                marginTop: '0.5rem'
+                            }}>
+                                JPG, PNG or GIF (max. 5MB)
+                            </span>
+                        </label>
+                        <input
+                            type="file"
+                            id="childProfilePic"
+                            name="childProfilePic"
+                            accept="image/*"
+                            style={{
+                                width: '0.1px',
+                                height: '0.1px',
+                                opacity: 0,
+                                overflow: 'hidden',
+                                position: 'absolute',
+                                zIndex: '-1'
+                            }}
+                            onChange={handleChildPicChange}
+                        />
+                    </div>
                 </div>
 
                 <div style={{ marginBottom: '1rem' }}>
@@ -223,13 +268,13 @@ function ChildProfile({
                     style={{
                         background: 'none',
                         border: 'none',
-                        color: '#f9c32b',
+                        color: '#111',
                         fontWeight: 700,
                         fontSize: '1rem',
                         cursor: 'pointer'
                     }}
                 >
-                    Edit Profile
+                    <FaPen />
                 </button>
             </div>
 
