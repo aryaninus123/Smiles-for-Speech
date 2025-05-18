@@ -55,7 +55,6 @@ const CHOICES = [
     { value: 'never', label: 'Never', color: '#f44336', hoverColor: '#d32f2f' }     // Red
 ];
 
-
 function AssessmentForm() {
     const { profileId } = useParams();
     const history = useHistory();
@@ -231,10 +230,7 @@ function AssessmentForm() {
                                             borderRadius: '0.5rem',
                                             padding: '0.5rem 1rem',
                                             border: answers[q.id] === choice.value ? `2px solid ${choice.color}` : '1px solid #ccc',
-                                            transition: 'all 0.2s',
-                                            '&:hover': {
-                                                background: answers[q.id] === choice.value ? choice.hoverColor : '#e9e9e9'
-                                            }
+                                            transition: 'all 0.2s'
                                         }}
                                     >
                                         <input

@@ -120,7 +120,12 @@ function ProfilePage() {
                         if (assessmentsResponse && assessmentsResponse.data && assessmentsResponse.data.length > 0) {
                             // Set test result if available
                             const latestAssessment = assessmentsResponse.data[0]; // Assuming sorted by date
-                            setTestResult(`Risk Level: ${latestAssessment.riskLevel || 'Unknown'} (${new Date(latestAssessment.createdAt).toLocaleDateString()})`);
+
+                            if (latestAssessment.createdAt) {
+                                setTestResult(`Risk Level: ${latestAssessment.riskLevel || 'Unknown'} (${new Date(latestAssessment.createdAt).toLocaleDateString()})`);
+                            } else {
+                                setTestResult('Assessment result found.');
+                            }
 
                             // Set latest assessment ID
                             setLatestAssessmentId(latestAssessment.id);
@@ -138,19 +143,28 @@ function ProfilePage() {
 
                             // Set summary if available
                             if (latestAssessment.recommendations && latestAssessment.recommendations.length > 0) {
-                                setSummary(`${latestAssessment.recommendations[0]}`);
+                                setSummary(latestAssessment.recommendations.join('\n'));
+                            } else {
+                                setSummary('No specific recommendations available.');
                             }
                         } else {
                             setLatestAssessmentId(null);
+                            setTestResult('No test result available.');
+                            setSummary('No Summary Available');
                         }
                     } catch (error) {
                         console.error('Error fetching assessments:', error);
                         setLatestAssessmentId(null);
+                        setTestResult('Error fetching test results.');
+                        setSummary('Error fetching summary.');
                     }
                 };
-
                 fetchAssessments();
             }
+        } else {
+            setTestResult('No test result available.');
+            setSummary('No Summary Available');
+            setLatestAssessmentId(null);
         }
     }, [selectedChild]);
 
@@ -178,7 +192,9 @@ function ProfilePage() {
 
                         // Set summary if available
                         if (latestAssessment.recommendations && latestAssessment.recommendations.length > 0) {
-                            setSummary(`${latestAssessment.recommendations[0]}`);
+                            setSummary(latestAssessment.recommendations.join('\n'));
+                        } else {
+                            setSummary('No specific recommendations available.');
                         }
                     }
                 } catch (error) {
@@ -1051,4 +1067,4 @@ function ProfilePage() {
     );
 }
 
-export default ProfilePage; 
+export default ProfilePage;

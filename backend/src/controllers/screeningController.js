@@ -12,30 +12,30 @@ const profilesCollection = db.collection('childProfiles');
 const getScreeningsByProfile = async (req, res) => {
   try {
     const { profileId } = req.params;
-    
+
     // Verify profile ownership
     const profileDoc = await profilesCollection.doc(profileId).get();
-    
+
     if (!profileDoc.exists) {
       return res.status(404).json({
         success: false,
         error: 'Profile not found'
       });
     }
-    
+
     if (profileDoc.data().parentUid !== req.user.uid) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to access this profile'
       });
     }
-    
+
     // Get screenings for this profile
     const screeningsSnapshot = await screeningsCollection
       .where('profileId', '==', profileId)
       .orderBy('createdAt', 'desc')
       .get();
-    
+
     const screenings = [];
     screeningsSnapshot.forEach(doc => {
       screenings.push({
@@ -43,7 +43,7 @@ const getScreeningsByProfile = async (req, res) => {
         ...doc.data()
       });
     });
-    
+
     res.status(200).json({
       success: true,
       count: screenings.length,
@@ -66,33 +66,33 @@ const getScreeningsByProfile = async (req, res) => {
 const getScreeningById = async (req, res) => {
   try {
     const screeningDoc = await screeningsCollection.doc(req.params.id).get();
-    
+
     if (!screeningDoc.exists) {
       return res.status(404).json({
         success: false,
         error: 'Screening not found'
       });
     }
-    
+
     const screeningData = screeningDoc.data();
-    
+
     // Verify profile ownership
     const profileDoc = await profilesCollection.doc(screeningData.profileId).get();
-    
+
     if (!profileDoc.exists) {
       return res.status(404).json({
         success: false,
         error: 'Associated profile not found'
       });
     }
-    
+
     if (profileDoc.data().parentUid !== req.user.uid) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to access this screening'
       });
     }
-    
+
     res.status(200).json({
       success: true,
       data: {
@@ -117,7 +117,7 @@ const getScreeningById = async (req, res) => {
 const createScreening = async (req, res) => {
   try {
     const { profileId, answers, notes } = req.body;
-    
+
     // Validate required fields
     if (!profileId || !answers) {
       return res.status(400).json({
@@ -125,30 +125,33 @@ const createScreening = async (req, res) => {
         error: 'Profile ID and answers are required'
       });
     }
-    
+
     // Verify profile ownership
     const profileDoc = await profilesCollection.doc(profileId).get();
-    
+
     if (!profileDoc.exists) {
       return res.status(404).json({
         success: false,
         error: 'Profile not found'
       });
     }
-    
+
     if (profileDoc.data().parentUid !== req.user.uid) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to create screening for this profile'
       });
     }
-    
+
+    // Get child profile data
+    const profileData = profileDoc.data();
+
     // Calculate screening score based on the answers
     const score = calculateScreeningScore(answers);
-    
+
     // Generate recommendations based on the score
     const { riskLevel, recommendations } = generateRecommendations(score);
-    
+
     // Save the screening result
     const screeningData = {
       profileId,
@@ -161,15 +164,33 @@ const createScreening = async (req, res) => {
       createdAt: new Date().toISOString(),
       userId: req.user.uid
     };
-    
+
     const docRef = await screeningsCollection.add(screeningData);
-    
+
+    // Calculate child's age from birthDate
+    let childAge = 'Unknown';
+    if (profileData.birthDate) {
+      const birthDate = new Date(profileData.birthDate);
+      const today = new Date();
+      childAge = today.getFullYear() - birthDate.getFullYear();
+      if (today.getMonth() < birthDate.getMonth() ||
+        (today.getMonth() === birthDate.getMonth() &&
+          today.getDate() < birthDate.getDate())) {
+        childAge--;
+      }
+    }
+
+    // Add child profile info to the response
+    const responseData = {
+      id: docRef.id,
+      ...screeningData,
+      childName: profileData.name || 'Unknown',
+      childAge: childAge.toString()
+    };
+
     res.status(201).json({
       success: true,
-      data: {
-        id: docRef.id,
-        ...screeningData
-      }
+      data: responseData
     });
   } catch (error) {
     console.error('Error creating screening:', error);
@@ -188,42 +209,42 @@ const createScreening = async (req, res) => {
 const updateScreening = async (req, res) => {
   try {
     const { notes } = req.body;
-    
+
     const screeningRef = screeningsCollection.doc(req.params.id);
     const screeningDoc = await screeningRef.get();
-    
+
     if (!screeningDoc.exists) {
       return res.status(404).json({
         success: false,
         error: 'Screening not found'
       });
     }
-    
+
     const screeningData = screeningDoc.data();
-    
+
     // Verify profile ownership
     const profileDoc = await profilesCollection.doc(screeningData.profileId).get();
-    
+
     if (!profileDoc.exists) {
       return res.status(404).json({
         success: false,
         error: 'Associated profile not found'
       });
     }
-    
+
     if (profileDoc.data().parentUid !== req.user.uid) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to update this screening'
       });
     }
-    
+
     // Update screening
     await screeningRef.update({
       notes: notes || screeningData.notes,
       updatedAt: new Date().toISOString()
     });
-    
+
     res.status(200).json({
       success: true,
       message: 'Screening updated successfully'
@@ -246,36 +267,36 @@ const deleteScreening = async (req, res) => {
   try {
     const screeningRef = screeningsCollection.doc(req.params.id);
     const screeningDoc = await screeningRef.get();
-    
+
     if (!screeningDoc.exists) {
       return res.status(404).json({
         success: false,
         error: 'Screening not found'
       });
     }
-    
+
     const screeningData = screeningDoc.data();
-    
+
     // Verify profile ownership
     const profileDoc = await profilesCollection.doc(screeningData.profileId).get();
-    
+
     if (!profileDoc.exists) {
       return res.status(404).json({
         success: false,
         error: 'Associated profile not found'
       });
     }
-    
+
     if (profileDoc.data().parentUid !== req.user.uid) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to delete this screening'
       });
     }
-    
+
     // Delete screening
     await screeningRef.delete();
-    
+
     res.status(200).json({
       success: true,
       message: 'Screening deleted successfully'
@@ -360,7 +381,7 @@ const getScreeningQuestions = async (req, res) => {
         options: ['Never', 'Rarely', 'Sometimes', 'Often', 'Always']
       }
     ];
-    
+
     res.status(200).json({
       success: true,
       data: questions
@@ -383,7 +404,7 @@ const calculateScreeningScore = (answers) => {
   // This is a simplified scoring algorithm for the hackathon
   // In a production app, this would be more sophisticated and 
   // based on validated screening tools
-  
+
   let score = 0;
   const answerValues = {
     'Never': 4,
@@ -400,13 +421,13 @@ const calculateScreeningScore = (answers) => {
     'Unusual': 3,
     'No words yet': 4
   };
-  
+
   // Reverse scoring for negative questions (where "never" is good)
   const reverseScoring = ['q10'];
-  
+
   Object.keys(answers).forEach(questionId => {
     const answer = answers[questionId];
-    
+
     if (reverseScoring.includes(questionId)) {
       // For reverse-scored questions, invert the score
       score += 4 - answerValues[answer];
@@ -414,7 +435,7 @@ const calculateScreeningScore = (answers) => {
       score += answerValues[answer] || 0;
     }
   });
-  
+
   return score;
 };
 
@@ -425,9 +446,9 @@ const calculateScreeningScore = (answers) => {
  */
 const generateRecommendations = (score) => {
   // In a production app, these thresholds would be based on validated tools
-  
+
   let riskLevel, recommendations;
-  
+
   if (score >= 30) {
     riskLevel = 'High';
     recommendations = [
@@ -453,7 +474,7 @@ const generateRecommendations = (score) => {
       'Discuss any new concerns with your healthcare provider'
     ];
   }
-  
+
   return { riskLevel, recommendations };
 };
 

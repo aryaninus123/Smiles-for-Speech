@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 // Updated categories to use string IDs that match the backend ('q1', 'q2', etc.)
@@ -49,6 +49,9 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
     const [location, setLocation] = useState(null);
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState('summary');
+    const [aiSummary, setAiSummary] = useState(null);
+    const [loadingAiSummary, setLoadingAiSummary] = useState(false);
+    const [aiError, setAiError] = useState(null);
     const categoryCounts = {};
     const totalCounts = { always: 0, often: 0, sometimes: 0, rarely: 0, never: 0 };
 
@@ -94,12 +97,15 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
         ((totalCounts.always || 0) + (totalCounts.often || 0) >= total / 2 ? 'Low' :
             (totalCounts.never || 0) + (totalCounts.rarely || 0) >= total / 2 ? 'High' : 'Medium');
 
-    const recommendations = savedResult?.recommendations || [
-        'Discuss these results with your child\'s healthcare provider',
-        'Continue monitoring your child\'s development',
-        'Engage in face-to-face play activities that encourage social interaction',
-        'Create opportunities for communication through daily activities'
-    ];
+    // Get the recommendations from AI summary or fallback to default
+    const recommendations = aiSummary?.recommendations && Array.isArray(aiSummary.recommendations)
+        ? aiSummary.recommendations
+        : savedResult?.recommendations || [
+            'Discuss these results with your child\'s healthcare provider',
+            'Continue monitoring your child\'s development',
+            'Engage in face-to-face play activities that encourage social interaction',
+            'Create opportunities for communication through daily activities'
+        ];
 
     // Local speech therapy resources for the Near You tab
     const localResources = [
@@ -128,6 +134,105 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
             services: 'Early intervention, developmental language therapy'
         }
     ];
+
+    // Effect to fetch AI-generated summary
+    useEffect(() => {
+        // Check for force refresh trigger
+        const forceRefreshKey = sessionStorage.getItem('forceRefreshAI');
+        if (forceRefreshKey) {
+            sessionStorage.removeItem('forceRefreshAI');
+            console.log('Force refresh detected');
+        }
+
+        const fetchAiSummary = async () => {
+            if (!processedAnswers || processedAnswers.length === 0 || Object.keys(totalCounts).reduce((a, b) => a + b, 0) === 0) {
+                console.log('Skipping AI fetch - insufficient data:', { processedAnswers, totalCounts });
+                return;
+            }
+
+            setLoadingAiSummary(true);
+            setAiError(null);
+
+            try {
+                console.log('Starting AI summary fetch with data:', { processedAnswers, savedResult, riskLevel });
+
+                const formattedAnswers = {};
+                processedAnswers.forEach(a => {
+                    if (a && a.id) {
+                        const id = a.id.toString().startsWith('q') ? a.id : `q${a.id}`;
+                        formattedAnswers[id] = a.answer;
+                    }
+                });
+
+                const childName = savedResult?.childName || "your child";
+                const childAge = savedResult?.childAge || "young";
+
+                // Prepare data for the Firebase function
+                const requestData = {
+                    childName: childName,
+                    childAge: childAge,
+                    assessmentData: formattedAnswers // Sending the detailed answers
+                };
+
+                console.log('Calling Firebase function generateOpenAISummary with:', requestData);
+
+                const response = await fetch('http://localhost:5001/smiles-for-speech-1b81d/us-central1/generateOpenAISummary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.text(); // Try to get error text
+                    console.error('Error response from Firebase function:', response.status, errorData);
+                    throw new Error(`Network response was not ok: ${response.status} - ${errorData}`);
+                }
+
+                const summaryData = await response.json();
+
+                console.log('AI summary result from Firebase function:', summaryData);
+
+                if (summaryData && summaryData.overallSummary) { // Check for the new expected structure
+                    setAiSummary(summaryData); // Store the whole object
+                    console.log('Personalized AI summary received and set:', summaryData);
+                } else if (summaryData && summaryData.rawSummary) {
+                    // Handle cases where the OpenAI response wasn't perfect JSON but was wrapped
+                    setAiSummary({
+                        overallSummary: "AI response might need review: " + summaryData.rawSummary,
+                        positiveObservations: [],
+                        areasForSupport: [],
+                        recommendations: [summaryData.errorParsing || "Please check the raw summary."]
+                    });
+                    setAiError(summaryData.errorParsing || 'AI summary was not in the expected format.');
+                    console.warn('Received raw summary or parsing error from Firebase function:', summaryData);
+                } else {
+                    setAiError('Unable to generate AI summary. Using default recommendations.');
+                    console.warn('Received incomplete or unexpected summary from Firebase function:', summaryData);
+                }
+
+            } catch (error) {
+                console.error('Error fetching AI summary from Firebase function:', error);
+                setAiError(`Error: ${error.message}. Using default recommendations.`);
+            } finally {
+                setLoadingAiSummary(false);
+            }
+        };
+
+        fetchAiSummary();
+
+        const timeoutId = setTimeout(() => {
+            if (loadingAiSummary) {
+                console.log('AI summary fetch timed out after 15 seconds'); // Increased timeout
+                setLoadingAiSummary(false);
+                setAiError('AI summary generation timed out. Using default recommendations.');
+            }
+        }, 15000); // Increased timeout to 15s
+
+        return () => clearTimeout(timeoutId);
+        // Ensure dependencies are correctly stringified if they are objects/arrays
+    }, [JSON.stringify(processedAnswers), JSON.stringify(savedResult), riskLevel]); // Stringify complex dependencies
 
     const TabButton = ({ id, label, active }) => (
         <button
@@ -173,6 +278,17 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
         );
     };
 
+    // Get the summary text - from AI or fallback to default
+    const summaryText = aiSummary?.overallSummary || getOverallSummary(totalCounts);
+
+    // Console log to debug AI summary
+    console.log('AI Summary Status:', {
+        aiSummaryReceived: !!aiSummary,
+        summaryText,
+        loadingStatus: loadingAiSummary,
+        error: aiError
+    });
+
     return (
         <div style={{ maxWidth: '44rem', margin: '2rem auto', padding: '0 1rem' }}>
             <h1 style={{ fontSize: '1.5rem', textAlign: 'center', fontWeight: 600, color: '#333', marginBottom: '2rem' }}>Assessment Results</h1>
@@ -213,11 +329,31 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
                         fontWeight: '600',
                         fontSize: '1.2rem'
                     }}>
-                        {Math.round(getPercentage(totalCounts[mainResponse], total))}%
+                        {riskLevel === 'Low' ? '✓' : riskLevel === 'Medium' ? '!' : '⚠️'}
                     </div>
                     <div>
                         <h2 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Quick Summary</h2>
-                        <p>{getOverallSummary(totalCounts)}</p>
+                        {loadingAiSummary ? (
+                            <div>
+                                <p>Generating personalized assessment...</p>
+                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                    <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', background: '#2196F3', animation: 'pulse 1s infinite' }}></div>
+                                    <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', background: '#2196F3', animation: 'pulse 1s infinite 0.2s' }}></div>
+                                    <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', background: '#2196F3', animation: 'pulse 1s infinite 0.4s' }}></div>
+                                </div>
+                                <style>
+                                    {`
+                                    @keyframes pulse {
+                                        0% { transform: scale(1); opacity: 1; }
+                                        50% { transform: scale(1.5); opacity: 0.7; }
+                                        100% { transform: scale(1); opacity: 1; }
+                                    }
+                                    `}
+                                </style>
+                            </div>
+                        ) : (
+                            <p>{summaryText}</p>
+                        )}
                     </div>
                 </div>
 
@@ -239,6 +375,50 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
                         </span>
                     </div>
                 )}
+
+                {/* AI Generation Status Indicator */}
+                <div style={{
+                    marginTop: '1rem',
+                    padding: '0.75rem',
+                    background: '#e3f2fd',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.9rem',
+                    color: '#0d47a1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                }}>
+                    <strong>AI Status:</strong>
+                    {loadingAiSummary ? 'Generating personalized summary...' :
+                        aiSummary ? 'Personalized assessment completed' :
+                            aiError ? 'Error: Using default content' : 'Using default content'}
+                </div>
+
+                {aiSummary?.note && (
+                    <div style={{
+                        marginTop: '1rem',
+                        padding: '0.75rem',
+                        background: '#e8f5e9',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.9rem',
+                        color: '#2e7d32'
+                    }}>
+                        <strong>Note:</strong> {aiSummary.note}
+                    </div>
+                )}
+
+                {aiError && (
+                    <div style={{
+                        marginTop: '1rem',
+                        padding: '0.75rem',
+                        background: '#ffebee',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.9rem',
+                        color: '#c62828'
+                    }}>
+                        <strong>Error:</strong> {aiError}
+                    </div>
+                )}
             </div>
 
             {/* Navigation Tabs */}
@@ -251,24 +431,21 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
             {/* Tab Content */}
             <div style={{
                 background: '#fff',
-                borderRadius: '0 0.5rem 0.5rem 0.5rem',
-                padding: '1.5rem',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                borderRadius: '0 1rem 1rem 1rem',
                 border: '1px solid #e0e0e0',
-                marginBottom: '2rem'
+                padding: '2rem'
             }}>
-                {activeTab === 'summary' && (
-                    <div>
-                        <h2 style={{ fontSize: '1.2rem', marginBottom: '1.5rem' }}>Detailed Results</h2>
-
-                        {Object.entries(categoryCounts).map(([category, counts]) => {
-                            const categoryTotal = Object.values(counts).reduce((a, b) => a + b, 0);
-                            const summary = getSummaryForGroup(counts);
+                {activeTab === 'summary' ? (
+                    // Detailed Results Tab
+                    <>
+                        {Object.entries(CATEGORIES).map(([category, questionIds]) => {
+                            const counts = categoryCounts[category];
+                            const total = questionIds.length;
                             return (
                                 <div key={category} style={{ marginBottom: '2rem' }}>
                                     <h3 style={{ color: '#333', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         {category}
-                                        <span style={{ fontSize: '0.9rem', color: '#666' }}>{CATEGORIES[category].length} questions</span>
+                                        <span style={{ fontSize: '0.9rem', color: '#666' }}>{questionIds.length} questions</span>
                                     </h3>
                                     <div style={{ marginBottom: '1rem' }}>
                                         {Object.entries(counts).map(([response, count]) => (
@@ -277,7 +454,7 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
                                                     <span style={{ minWidth: '5rem', fontSize: '0.9rem' }}>{response.charAt(0).toUpperCase() + response.slice(1)}</span>
                                                     <div style={{ flex: 1, height: '1.25rem', background: '#eee', borderRadius: '0.25rem', overflow: 'hidden' }}>
                                                         <div style={{
-                                                            width: `${getPercentage(count, CATEGORIES[category].length)}%`,
+                                                            width: `${getPercentage(count, total)}%`,
                                                             height: '100%',
                                                             background: RESPONSE_COLORS[response],
                                                             transition: 'width 0.3s ease'
@@ -288,14 +465,7 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
                                             </div>
                                         ))}
                                     </div>
-                                    <div style={{
-                                        padding: '0.75rem',
-                                        background: '#f5f5f5',
-                                        borderRadius: '0.5rem',
-                                        fontSize: '0.95rem'
-                                    }}>
-                                        {summary}
-                                    </div>
+                                    <p style={{ fontSize: '0.95rem', color: '#666', marginTop: '0.5rem' }}>{getSummaryForGroup(counts)}</p>
                                 </div>
                             );
                         })}
@@ -306,138 +476,134 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
                                 <p style={{ whiteSpace: 'pre-wrap' }}>{savedResult.notes}</p>
                             </div>
                         )}
-                    </div>
-                )}
-
-                {activeTab === 'nextSteps' && (
-                    <div>
-                        <h2 style={{ fontSize: '1.2rem', marginBottom: '1.5rem' }}>Recommendations</h2>
-
+                    </>
+                ) : activeTab === 'nextSteps' ? (
+                    // Next Steps Tab
+                    <>
                         <div style={{
+                            background: '#fff3e0',
                             padding: '1rem',
-                            background: '#f5f5f5',
                             borderRadius: '0.5rem',
+                            borderLeft: '4px solid #f9c32b',
                             marginBottom: '1.5rem'
                         }}>
-                            <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>Risk Level Assessment</div>
-
-                            <div style={{
-                                padding: '0.5rem 1rem',
-                                background: riskLevel === 'Low' ? '#e8f5e9' : riskLevel === 'Medium' ? '#fff3e0' : '#ffebee',
-                                color: riskLevel === 'Low' ? '#2e7d32' : riskLevel === 'Medium' ? '#ef6c00' : '#c62828',
-                                borderRadius: '0.25rem',
-                                display: 'inline-block',
-                                fontWeight: '600',
-                                marginBottom: '0.5rem'
-                            }}>
-                                {riskLevel}
-                            </div>
-
-                            <p style={{ fontSize: '0.95rem' }}>
-                                {riskLevel === 'Low'
-                                    ? 'Based on your responses, your child appears to be developing typically in the areas assessed.'
-                                    : riskLevel === 'Medium'
-                                        ? 'Based on your responses, your child may need some additional support in certain developmental areas.'
-                                        : 'Based on your responses, it is recommended to consult with a healthcare provider about your child\'s development.'}
-                            </p>
+                            <strong>Important Note:</strong> This screening tool is not a diagnosis. It is designed to help identify potential areas that may need further evaluation.
                         </div>
 
-                        <div>
-                            <div style={{ fontWeight: '600', marginBottom: '1rem' }}>What to do next:</div>
-                            <ul style={{ paddingLeft: '1.5rem', marginBottom: '1.5rem' }}>
-                                {recommendations.map((rec, i) => (
-                                    <li key={i} style={{ marginBottom: '0.75rem' }}>{rec}</li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        {childInfo && (
-                            <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-                                <Link to={`/assessment/${childInfo.id}`} style={{
-                                    display: 'inline-block',
-                                    padding: '0.75rem 1.5rem',
-                                    background: '#f9c32b',
-                                    color: 'white',
-                                    fontWeight: '600',
-                                    borderRadius: '0.5rem',
-                                    textDecoration: 'none',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                    margin: '0 auto'
-                                }}>
-                                    Take Assessment Again
-                                </Link>
-                            </div>
+                        {aiSummary && aiSummary.positiveObservations && aiSummary.positiveObservations.length > 0 && (
+                            <>
+                                <h3 style={{ color: '#444', marginBottom: '1rem' }}>Positive Observations</h3>
+                                <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', marginBottom: '1.5rem' }}>
+                                    {aiSummary.positiveObservations.map((item, index) => (
+                                        <li key={`pos-${index}`} style={{ marginBottom: '0.5rem' }}>{item}</li>
+                                    ))}
+                                </ul>
+                            </>
                         )}
-                    </div>
-                )}
 
-                {activeTab === 'nearYou' && (
-                    <div>
-                        <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Speech Therapists Near You</h2>
+                        {aiSummary && aiSummary.areasForSupport && aiSummary.areasForSupport.length > 0 && (
+                            <>
+                                <h3 style={{ color: '#444', marginBottom: '1rem' }}>Areas for Support</h3>
+                                <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', marginBottom: '1.5rem' }}>
+                                    {aiSummary.areasForSupport.map((item, index) => (
+                                        <li key={`sup-${index}`} style={{ marginBottom: '0.5rem' }}>{item}</li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
 
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <button
-                                onClick={getUserLocation}
-                                style={{
-                                    padding: '0.75rem 1rem',
-                                    background: '#f9c32b',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '0.5rem',
-                                    fontWeight: '600',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                Find Therapists Near Me
-                            </button>
-
-                            {error && (
-                                <p style={{ color: '#c62828', marginTop: '0.5rem' }}>{error}</p>
-                            )}
-
-                            {location && (
-                                <p style={{ marginTop: '0.5rem' }}>
-                                    Your location: {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-                                </p>
-                            )}
-                        </div>
-
-                        <div>
-                            <p style={{ marginBottom: '1.5rem' }}>Here are some speech therapy resources available in your region:</p>
-
-                            {localResources.map((resource, i) => (
-                                <div key={i} style={{
-                                    padding: '1rem',
-                                    background: '#f5f5f5',
-                                    borderRadius: '0.5rem',
-                                    marginBottom: '1rem'
+                        <h3 style={{ color: '#444', marginBottom: '1rem' }}>Suggested Steps</h3>
+                        <ul style={{ listStyle: 'none', padding: 0, marginBottom: '2rem' }}>
+                            {recommendations.map((step, index) => (
+                                <li key={index} style={{
+                                    marginBottom: '0.75rem',
+                                    paddingLeft: '1.5rem',
+                                    position: 'relative'
                                 }}>
-                                    <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '0.5rem' }}>{resource.name}</div>
-                                    <div style={{ marginBottom: '0.25rem' }}><strong>Location:</strong> {resource.location}</div>
-                                    <div style={{ marginBottom: '0.25rem' }}><strong>Contact:</strong> {resource.contact}</div>
-                                    <div><strong>Services:</strong> {resource.services}</div>
-                                </div>
+                                    <span style={{ position: 'absolute', left: 0, color: '#4CAF50' }}>•</span>
+                                    {step}
+                                </li>
                             ))}
-                        </div>
-                    </div>
+                        </ul>
+
+                        <h3 style={{ color: '#444', marginBottom: '1rem' }}>Local Resources</h3>
+                        <ul style={{
+                            listStyle: 'none',
+                            padding: '0.5rem 1rem',
+                            background: '#f5f5f5',
+                            borderRadius: '0.5rem',
+                            marginBottom: '0'
+                        }}>
+                            {[
+                                'Autism Awareness Care and Training (AACT) - Accra',
+                                'Your local district hospital\'s pediatric department',
+                                'The Children\'s Hospital at Korle Bu Teaching Hospital'
+                            ].map((resource, index) => (
+                                <li key={index} style={{
+                                    padding: '0.75rem',
+                                    borderBottom: index !== 2 ? '1px solid #e0e0e0' : 'none'
+                                }}>
+                                    {resource}
+                                </li>
+                            ))}
+                        </ul>
+                    </>
+                ) : (
+                    // Near You Tab
+                    <>
+                        <button
+                            onClick={getUserLocation}
+                            style={{
+                                padding: '10px 16px',
+                                backgroundColor: '#4caf50',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                marginTop: '1rem'
+                            }}
+                        >
+                            Find Resources Near Me
+                        </button>
+
+                        {location && (
+                            <p>
+                                Location: {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+                            </p>
+                        )}
+
+                        {error && <p style={{ color: 'red' }}>{error}</p>}
+                    </>
                 )}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+            {/* Back Button */}
+            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
                 <button
                     onClick={onBack}
                     style={{
-                        padding: '0.75rem 1.5rem',
                         background: '#f5f5f5',
-                        color: '#333',
                         border: '1px solid #ddd',
+                        color: '#333',
+                        padding: '0.75rem 1.5rem',
                         borderRadius: '0.5rem',
-                        fontWeight: '600',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        fontWeight: '500'
                     }}
                 >
                     Back to Profile
                 </button>
+            </div>
+
+            {/* Privacy Note */}
+            <div style={{
+                marginTop: '1rem',
+                textAlign: 'center',
+                color: '#666',
+                fontSize: '0.9rem'
+            }}>
+                <p><em>Privacy Note: Your answers are saved securely in accordance with our privacy policy.</em></p>
             </div>
         </div>
     );

@@ -28,7 +28,7 @@ function App() {
           <Route path="/forgot-password" component={ForgotPassword} />
           <Route path="/reset-password" component={ResetPassword} />
           <Route path="/education" component={EducationPage} />
-          
+
           {/* Protected routes - require authentication */}
           <ProtectedRoute path="/profile" component={ProfilePage} />
           <ProtectedRoute path="/assessment/:profileId?" component={AssessmentForm} />
