@@ -81,18 +81,18 @@ function ProfilePage() {
             const hasTest = selectedChild.testResults && selectedChild.testResults.length > 0;
             setTestResult(hasTest ? "Test results found" : "No test result available.");
             setSummary("No Summary Available");
-            
+
             // Fetch assessment results for the selected child
             if (selectedChild.id) {
                 const fetchAssessments = async () => {
                     try {
                         const assessmentsResponse = await screeningAPI.getScreeningsByProfile(selectedChild.id);
-                        
+
                         if (assessmentsResponse && assessmentsResponse.data && assessmentsResponse.data.length > 0) {
                             // Set test result if available
                             const latestAssessment = assessmentsResponse.data[0]; // Assuming sorted by date
                             setTestResult(`Risk Level: ${latestAssessment.riskLevel || 'Unknown'} (${new Date(latestAssessment.createdAt).toLocaleDateString()})`);
-                            
+
                             // Set summary if available
                             if (latestAssessment.recommendations && latestAssessment.recommendations.length > 0) {
                                 setSummary(`${latestAssessment.recommendations[0]}`);
@@ -102,7 +102,7 @@ function ProfilePage() {
                         console.error('Error fetching assessments:', error);
                     }
                 };
-                
+
                 fetchAssessments();
             }
         }
@@ -226,16 +226,16 @@ function ProfilePage() {
         try {
             setSidebarError('');
             setLoading(true);
-            
+
             // Prepare child profile data
             const childProfileData = {
                 name: childName,
                 age: childAge
             };
-            
+
             // Call API to create child profile
             const response = await profilesAPI.createProfile(childProfileData);
-            
+
             if (response && response.data) {
                 // Add the new child to the list
                 const newChild = response.data;
@@ -247,7 +247,7 @@ function ProfilePage() {
                 setChildName('');
                 setChildAge('');
                 setSidebarSuccess('Child profile added successfully!');
-                
+
                 setTimeout(() => {
                     setSidebarSuccess('');
                 }, 3000);
@@ -276,18 +276,18 @@ function ProfilePage() {
             setLoading(true);
             // Call the API to delete the child profile
             await profilesAPI.deleteProfile(childId);
-            
+
             // Update local state
             const updatedChildren = childrenList.filter(child => child.id !== childId);
             setChildrenList(updatedChildren);
-            
+
             // If the deleted child was selected, clear the selection
             if (selectedChild && selectedChild.id === childId) {
                 setSelectedChild(null);
                 setTestResult('No test result available.');
                 setSummary('No summary available.');
             }
-            
+
             setSidebarSuccess('Child profile deleted successfully!');
             setTimeout(() => {
                 setSidebarSuccess('');
@@ -605,14 +605,14 @@ function ProfilePage() {
                                 {editingChild && editingChild.id === selectedChild.id ? (
                                     <form onSubmit={handleSaveChild} style={{ textAlign: 'center' }}>
                                         <h2 className="sfs-hero-title" style={{ fontSize: '2rem', marginBottom: '1.5rem' }}>Edit {editChildName}'s Profile</h2>
-                                        
-                                        <img 
-                                            src={editChildPic} 
-                                            alt="Child Profile preview" 
-                                            className="sfs-photo" 
-                                            style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }} 
+
+                                        <img
+                                            src={editChildPic}
+                                            alt="Child Profile preview"
+                                            className="sfs-photo"
+                                            style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }}
                                         />
-                                        
+
                                         <div style={{ marginBottom: '1rem' }}>
                                             <label htmlFor="childProfilePic" style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#111' }}>Profile Picture</label>
                                             <input
@@ -654,17 +654,17 @@ function ProfilePage() {
                                         </div>
 
                                         <button type="submit" className="sfs-get-started-btn" style={{ marginRight: '1rem' }}>Save Changes</button>
-                                        <button 
-                                            type="button" 
-                                            className="sfs-link" 
-                                            style={{ 
-                                                background: 'none', 
-                                                border: 'none', 
-                                                color: '#f9c32b', 
-                                                fontWeight: 700, 
-                                                fontSize: '1rem', 
-                                                cursor: 'pointer' 
-                                            }} 
+                                        <button
+                                            type="button"
+                                            className="sfs-link"
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                color: '#f9c32b',
+                                                fontWeight: 700,
+                                                fontSize: '1rem',
+                                                cursor: 'pointer'
+                                            }}
                                             onClick={handleCancelChildEdit}
                                         >
                                             Cancel
@@ -690,16 +690,18 @@ function ProfilePage() {
                                             </button>
                                         </div>
 
-                                <div style={{ textAlign: 'center' }}>
-                                    <img
-                                        src={`https://api.dicebear.com/6.x/avataaars/svg?seed=${selectedChild.name}`}
-                                        alt="Child Profile"
-                                        className="sfs-photo"
-                                        style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }}
-                                    />
-                                    <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#111', marginBottom: '0.5rem' }}>{selectedChild.name}</div>
-                                    <div style={{ fontSize: '1.1rem', color: '#555', marginBottom: '1.5rem' }}>Age: {selectedChild.age}</div>
-                                </div>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <img
+                                                src={`https://api.dicebear.com/6.x/avataaars/svg?seed=${selectedChild.name}`}
+                                                alt="Child Profile"
+                                                className="sfs-photo"
+                                                style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '1.5rem' }}
+                                            />
+                                            <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#111', marginBottom: '0.5rem' }}>{selectedChild.name}</div>
+                                            <div style={{ fontSize: '1.1rem', color: '#555', marginBottom: '1.5rem' }}>Age: {selectedChild.age}</div>
+                                        </div>
+                                    </>
+                                )}
                             </>
                         ) : (
                             <>
