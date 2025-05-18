@@ -16,13 +16,22 @@ const RESPONSE_COLORS = {
     never: '#f44336'      // Red
 };
 
+// Base URL for local Node backend API
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:5002/api'
+    : 'https://us-central1-smiles-for-speech-1b81d.cloudfunctions.net';
+
+// Endpoint for AI summary based on environment
+const AI_SUMMARY_ENDPOINT = window.location.hostname === 'localhost'
+    ? `${API_BASE_URL}/ai/summary`
+    : `${API_BASE_URL}/generateOpenAISummary`;
 
 const getSummaryForGroup = (counts) => {
     const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
-    // For autism screening, "never" and "rarely" are positive indicators (lower risk)
-    const positiveResponses = (counts.never || 0) + (counts.rarely || 0);
-    // "always" and "often" are concerning indicators (higher risk)
-    const concerningResponses = (counts.always || 0) + (counts.often || 0);
+    // For autism screening, "never" and "rarely" are concerning indicators (higher risk)
+    const concerningResponses = (counts.never || 0) + (counts.rarely || 0);
+    // "always" and "often" are positive indicators (lower risk)
+    const positiveResponses = (counts.always || 0) + (counts.often || 0);
 
     if (positiveResponses >= total / 2) return "Your child shows typical development in this area.";
     if (concerningResponses >= total / 2) return "Some behaviors in this area may need further evaluation. Consider speaking to a specialist.";
@@ -31,10 +40,10 @@ const getSummaryForGroup = (counts) => {
 
 const getOverallSummary = (totalCounts) => {
     const total = Object.values(totalCounts).reduce((sum, count) => sum + count, 0);
-    // For autism screening, "never" and "rarely" are positive indicators (lower risk)
-    const positiveResponses = (totalCounts.never || 0) + (totalCounts.rarely || 0);
-    // "always" and "often" are concerning indicators (higher risk)
-    const concerningResponses = (totalCounts.always || 0) + (totalCounts.often || 0);
+    // For autism screening, "never" and "rarely" are concerning indicators (higher risk)
+    const concerningResponses = (totalCounts.never || 0) + (totalCounts.rarely || 0);
+    // "always" and "often" are positive indicators (lower risk)
+    const positiveResponses = (totalCounts.always || 0) + (totalCounts.often || 0);
 
     if (positiveResponses >= total / 2) {
         return "Your child shows many typical social communication behaviors. Keep supporting their growth!";
@@ -43,6 +52,35 @@ const getOverallSummary = (totalCounts) => {
         return "The screening results indicate some behaviors that may suggest further evaluation is needed. It's recommended to discuss these observations with a healthcare professional for guidance.";
     }
     return "Your child shows some behaviors that may benefit from continued observation. Consider discussing the results with a developmental specialist.";
+};
+
+// Calculate risk level using MCHAT-inspired thresholds
+// "Never" and "Rarely" responses to social communication questions are concerning for autism risk
+const calculateRiskLevel = (answers) => {
+    // Count concerning responses (never/rarely)
+    let concerningCount = 0;
+    const concerningResponses = [];
+    
+    Object.entries(answers).forEach(([qid, answer]) => {
+        const lowerAnswer = (answer || '').toLowerCase();
+        if (lowerAnswer === 'never' || lowerAnswer === 'rarely') {
+            concerningCount++;
+            concerningResponses.push(qid);
+        }
+    });
+    
+    console.log('RISK CALCULATION DETAILS:', {
+        totalQuestions: Object.keys(answers).length,
+        concerningCount,
+        concerningQuestions: concerningResponses,
+        threshold1: 4, // Medium risk threshold
+        threshold2: 8  // High risk threshold
+    });
+    
+    // MCHAT-inspired thresholds (adapted for this screening)
+    if (concerningCount >= 8) return 'High';       // 8+ concerning answers → High risk
+    if (concerningCount >= 4) return 'Medium';     // 4-7 concerning answers → Medium risk
+    return 'Low';                                  // 0-3 concerning answers → Low risk
 };
 
 function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
@@ -94,10 +132,22 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
         .sort(([, a], [, b]) => b - a)
         .filter(([, count]) => count > 0)[0]?.[0] || 'sometimes';
 
-    // Get risk level and recommendations from saved result if available
-    const riskLevel = savedResult?.riskLevel ||
-        ((totalCounts.never || 0) + (totalCounts.rarely || 0) >= total / 2 ? 'Low' :
-            (totalCounts.always || 0) + (totalCounts.often || 0) >= total / 2 ? 'High' : 'Medium');
+    // Calculate risk level based on MCHAT-style thresholds
+    let calculatedRiskLevel = calculateRiskLevel(
+        Object.fromEntries(processedAnswers.map(a => [a.id.toString().startsWith('q') ? a.id : `q${a.id}`, a.answer]))
+    );
+
+    // Debug risk level calculation
+    console.log('Risk Level Calculation (MCHAT-style):', {
+        processedAnswers,
+        calculatedRiskLevel,
+        savedRiskLevel: savedResult?.riskLevel,
+        aiRiskLevel: aiSummary?.riskLevel
+    });
+
+    // CHANGED: Priority now gives calculated risk level highest priority
+    // This ensures we always use the current test results, not saved values
+    const riskLevel = calculatedRiskLevel || aiSummary?.riskLevel || savedResult?.riskLevel || 'Unknown';
 
     // Get the summary text - from AI or fallback to default
     const summaryText = aiSummary?.overallSummary || getOverallSummary(totalCounts);
@@ -207,16 +257,29 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
                 const childName = savedResult?.childName || "your child";
                 const childAge = savedResult?.childAge || "young";
 
-                // Prepare data for the Firebase function
+                // Prepare data for the AI summary request
                 const requestData = {
                     childName: childName,
                     childAge: childAge,
-                    assessmentData: formattedAnswers // Sending the detailed answers
+                    assessmentData: formattedAnswers, // Sending the detailed answers
+                    riskLevel: calculatedRiskLevel, // Always use fresh calculation, not saved level
+                    questionMap: {
+                        q1: 'Does your child respond to their name being called?',
+                        q2: 'Does your child make eye contact when interacting with others?',
+                        q3: 'Does your child use gestures (like pointing or waving) to communicate?',
+                        q4: 'Does your child look at you when you talk?',
+                        q5: 'Does your child respond when you call their name?',
+                        q6: 'Does your child watch or go near other children?',
+                        q7: 'Does your child smile back when someone smiles?',
+                        q8: 'Does your child show you things just to share?',
+                        q9: 'Does your child point to show you things that interest them?',
+                        q10: 'Does your child imitate your actions?'
+                    }
                 };
 
                 console.log('Calling Firebase function generateOpenAISummary with:', requestData);
 
-                const response = await fetch('http://localhost:5001/smiles-for-speech-1b81d/us-central1/generateOpenAISummary', {
+                const response = await fetch(AI_SUMMARY_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -272,7 +335,7 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
 
         return () => clearTimeout(timeoutId);
         // Ensure dependencies are correctly stringified if they are objects/arrays
-    }, [JSON.stringify(processedAnswers), JSON.stringify(savedResult), riskLevel]); // Stringify complex dependencies
+    }, [JSON.stringify(processedAnswers), JSON.stringify(savedResult)]); // Stringify complex dependencies
 
     const TabButton = ({ id, label, active }) => (
         <button
@@ -474,7 +537,9 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
                         width: '4rem',
                         height: '4rem',
                         borderRadius: '50%',
-                        background: RESPONSE_COLORS[mainResponse],
+                        background: riskLevel === 'High' ? RESPONSE_COLORS.never : 
+                                   riskLevel === 'Medium' ? RESPONSE_COLORS.sometimes : 
+                                   RESPONSE_COLORS.always,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
