@@ -356,11 +356,11 @@ function ProfilePage() {
             setChildActionStatus({ message: '', type: '' });
             try {
                 await profilesAPI.deleteProfile(childId);
-                
+
                 // Update children list
                 const updatedChildrenList = childrenList.filter(child => child.id !== childId);
                 setChildrenList(updatedChildrenList);
-                
+
                 setChildActionStatus({ message: `${childToDelete.name}'s profile deleted successfully.`, type: 'success' });
                 setTimeout(() => setChildActionStatus({ message: '', type: '' }), 4000);
 
@@ -703,10 +703,10 @@ function ProfilePage() {
                                     >
                                         <div onClick={() => handleSelectChild(child)} style={{ flexGrow: 1, fontWeight: '600' }}>{child.name}</div>
                                         <div onClick={() => handleSelectChild(child)} style={{ color: '#666', marginRight: '10px' }}>Age: {child.age}</div>
-                                        <button 
-                                            onClick={(e) => { 
+                                        <button
+                                            onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleDeleteChild(child.id); 
+                                                handleDeleteChild(child.id);
                                             }}
                                             title={`Delete ${child.name}`}
                                             style={{
@@ -719,10 +719,10 @@ function ProfilePage() {
                                         >
                                             <FaTrash style={{ fontSize: '0.9rem' }} />
                                         </button>
-                                        <button 
-                                            onClick={(e) => { 
+                                        <button
+                                            onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleEditChild(child); 
+                                                handleEditChild(child);
                                             }}
                                             title={`Edit ${child.name}`}
                                             style={{
@@ -754,12 +754,12 @@ function ProfilePage() {
                     <section style={{ maxWidth: '28rem', width: '100%', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '2rem', margin: '0 auto' }}>
                         {/* Display childActionStatus here */}
                         {childActionStatus.message && (
-                            <div style={{ 
-                                padding: '10px', 
-                                marginBottom: '15px', 
-                                borderRadius: '4px', 
+                            <div style={{
+                                padding: '10px',
+                                marginBottom: '15px',
+                                borderRadius: '4px',
                                 fontSize: '0.95rem',
-                                background: childActionStatus.type === 'success' ? '#e8f5e9' : '#ffebee', 
+                                background: childActionStatus.type === 'success' ? '#e8f5e9' : '#ffebee',
                                 color: childActionStatus.type === 'success' ? '#2e7d32' : '#c62828',
                                 border: `1px solid ${childActionStatus.type === 'success' ? '#a5d6a7' : '#ef9a9a'}`,
                                 textAlign: 'center'
@@ -771,10 +771,10 @@ function ProfilePage() {
                         {selectedChild ? (
                             <div className="sfs-profile-grid">
                                 {/* Child Profile Display */}
-                                <ChildProfile 
-                                    selectedChild={selectedChild} 
+                                <ChildProfile
+                                    selectedChild={selectedChild}
                                     testResult={testResult}
-                                    summary={summary} 
+                                    summary={summary}
                                     onEditChild={handleEditChild}
                                     onSaveChild={handleSaveChild}
                                     onCancelEdit={handleCancelChildEdit}

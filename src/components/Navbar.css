@@ -3,6 +3,11 @@
     border-bottom: 1px solid #e0e0e0;
     padding: 1rem 0;
     width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
 }
 
 .sfs-navbar-content {
@@ -78,4 +83,4 @@
         justify-content: center;
         gap: 1rem;
     }
-} 
+}

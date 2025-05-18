@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 
 // Updated categories to use string IDs that match the backend ('q1', 'q2', etc.)
 const CATEGORIES = {
-    'Social Awareness & Interaction': ['q1', 'q2', 'q4', 'q6', 'q7'],
-    'Communication & Gestures': ['q3', 'q5', 'q9'],
-    'Play & Imitation': ['q8', 'q10']
+    'Social Awareness & Interaction': ['q1', 'q2', 'q4', 'q5', 'q7', 'q12', 'q13', 'q15'],
+    'Communication & Gestures': ['q3', 'q9', 'q14'],
+    'Play & Imitation': ['q6', 'q8', 'q10', 'q11']
 };
 
 const RESPONSE_COLORS = {
@@ -52,6 +52,8 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
     const [aiSummary, setAiSummary] = useState(null);
     const [loadingAiSummary, setLoadingAiSummary] = useState(false);
     const [aiError, setAiError] = useState(null);
+    const [searchResults, setSearchResults] = useState([]);
+    const [searchLoading, setSearchLoading] = useState(false);
     const categoryCounts = {};
     const totalCounts = { always: 0, often: 0, sometimes: 0, rarely: 0, never: 0 };
 
@@ -108,33 +110,70 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
         "Look into local early intervention programs that can provide additional support if needed."
     ];
 
-    // Local speech therapy resources for the Near You tab
+    // Local resources data
     const localResources = [
         {
-            name: 'Accra Speech Therapy Center',
-            location: 'East Legon, Accra',
-            contact: '+233 20 123 4567',
-            services: 'Speech evaluation, articulation therapy, language intervention'
+            title: 'Autism Awareness Care and Training (AACT)',
+            link: 'https://aact-ghana.org/',
+            snippet: 'A leading autism center in Accra providing assessment, therapy and support for children with autism and their families.'
         },
         {
-            name: 'Children\'s Communication Clinic',
-            location: 'Osu, Accra',
-            contact: '+233 24 987 6543',
-            services: 'Pediatric speech therapy, developmental assessments'
+            title: 'The Children\'s Hospital at Korle Bu Teaching Hospital',
+            link: 'https://kbth.gov.gh/departments-and-units/child-health-department/',
+            snippet: 'Pediatric specialists providing developmental assessments and therapy services for children with special needs.'
         },
         {
-            name: 'Korle Bu Speech and Hearing Center',
-            location: 'Korle Bu Teaching Hospital, Accra',
-            contact: '+233 30 268 3045',
-            services: 'Speech and language assessments, audiology, intervention'
+            title: 'Early Autism Project Ghana',
+            link: 'https://eapghana.com/',
+            snippet: 'Provides evidence-based ABA therapy and speech therapy services for children with autism in Ghana.'
         },
         {
-            name: 'Hope Speech Therapy',
-            location: 'Tema, Greater Accra',
-            contact: '+233 55 765 4321',
-            services: 'Early intervention, developmental language therapy'
+            title: 'Multikids Inclusive Academy',
+            link: 'https://multikidsafrica.org/',
+            snippet: 'An inclusive education center offering speech therapy, occupational therapy and support for children with various developmental needs.'
         }
     ];
+
+    const getUserLocation = () => {
+        if (!navigator.geolocation) {
+            setError('Geolocation is not supported by your browser.');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const coords = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                };
+                setLocation(coords);
+                setError('');
+            },
+            (err) => {
+                if (err.code === 1) {
+                    setError('Permission denied. Please enable location access.');
+                } else {
+                    setError('Unable to retrieve your location.');
+                }
+            }
+        );
+    };
+
+    const searchNearbyResources = () => {
+        if (!location) {
+            setError('Please get your location first');
+            return;
+        }
+
+        setSearchLoading(true);
+
+        // Simulate loading and then display resources directly on screen
+        setTimeout(() => {
+            // Set results to the local resources (simulating a search)
+            setSearchResults(localResources);
+            setSearchLoading(false);
+        }, 1500);
+    };
 
     // Effect to fetch AI-generated summary
     useEffect(() => {
@@ -255,37 +294,153 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
             {label}
         </button>
     );
-    const getUserLocation = () => {
-        if (!navigator.geolocation) {
-            setError('Geolocation is not supported by your browser.');
-            return;
-        }
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                setLocation({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                });
-                setError('');
-            },
-            (err) => {
-                if (err.code === 1) {
-                    setError('Permission denied. Please enable location access.');
-                } else {
-                    setError('Unable to retrieve your location.');
-                }
-            }
-        );
-    };
+    // Near You Tab content
+    const renderNearYouTab = () => (
+        <>
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <h3 style={{ color: '#333', marginBottom: '1rem', fontSize: '1.2rem' }}>Find Resources Near You</h3>
+                <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+                    Click the button below to find special needs and speech therapy resources in your area.
+                </p>
 
-    // Console log to debug AI summary
-    console.log('AI Summary Status:', {
-        aiSummaryReceived: !!aiSummary,
-        summaryText,
-        loadingStatus: loadingAiSummary,
-        error: aiError
-    });
+                <button
+                    onClick={getUserLocation}
+                    style={{
+                        padding: '12px 20px',
+                        backgroundColor: '#4caf50',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                        fontSize: '1rem',
+                        marginRight: location ? '1rem' : '0'
+                    }}
+                >
+                    {location ? '✓ Location Found' : 'Find My Location'}
+                </button>
+
+                {location && (
+                    <button
+                        onClick={searchNearbyResources}
+                        style={{
+                            padding: '12px 20px',
+                            backgroundColor: '#2196F3',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                            fontSize: '1rem'
+                        }}
+                        disabled={searchLoading}
+                    >
+                        {searchLoading ? 'Searching...' : 'Search All Resources'}
+                    </button>
+                )}
+            </div>
+
+            {error && (
+                <div style={{
+                    padding: '0.75rem 1rem',
+                    backgroundColor: '#ffebee',
+                    color: '#c62828',
+                    borderRadius: '0.5rem',
+                    marginBottom: '1.5rem',
+                    textAlign: 'center'
+                }}>
+                    {error}
+                </div>
+            )}
+
+            {searchLoading && (
+                <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                    <div style={{
+                        display: 'inline-block',
+                        borderTop: '3px solid #2196F3',
+                        borderRight: '3px solid transparent',
+                        borderBottom: '3px solid transparent',
+                        borderLeft: '3px solid transparent',
+                        borderRadius: '50%',
+                        width: '30px',
+                        height: '30px',
+                        animation: 'spin 1s linear infinite'
+                    }}></div>
+                    <p style={{ marginTop: '1rem', color: '#666' }}>Searching for resources near you...</p>
+                    <style>{`
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                    `}</style>
+                </div>
+            )}
+
+            {/* Display resources section - show when search is complete or as default */}
+            {!searchLoading && (
+                <div style={{
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '0.75rem',
+                    padding: '1.5rem',
+                    marginBottom: '2rem'
+                }}>
+                    <h3 style={{
+                        fontSize: '1.1rem',
+                        marginBottom: '1rem',
+                        color: '#333'
+                    }}>
+                        {searchResults.length > 0 ? 'Resources Near You' : 'Local Resources'}
+                    </h3>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {(searchResults.length > 0 ? searchResults : localResources).map((resource, index) => (
+                            <div
+                                key={index}
+                                style={{
+                                    padding: '1rem',
+                                    backgroundColor: 'white',
+                                    borderRadius: '0.5rem',
+                                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                    border: '1px solid #e0e0e0'
+                                }}
+                            >
+                                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', color: '#1976d2' }}>
+                                    {resource.title}
+                                </h4>
+                                <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', color: '#666' }}>
+                                    {resource.snippet}
+                                </p>
+                                {resource.link && (
+                                    <div style={{ textAlign: 'right' }}>
+                                        <a
+                                            href={resource.link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{
+                                                display: 'inline-block',
+                                                padding: '0.5rem 1rem',
+                                                backgroundColor: '#e3f2fd',
+                                                color: '#1976d2',
+                                                borderRadius: '0.25rem',
+                                                textDecoration: 'none',
+                                                fontWeight: '500',
+                                                fontSize: '0.9rem'
+                                            }}
+                                        >
+                                            Visit Website
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </>
+    );
 
     return (
         <div style={{ maxWidth: '44rem', margin: '2rem auto', padding: '0 1rem' }}>
@@ -575,55 +730,11 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
                             ))}
                         </ul>
 
-                        <h3 style={{ color: '#444', marginBottom: '1rem' }}>Local Resources</h3>
-                        <ul style={{
-                            listStyle: 'none',
-                            padding: '0.5rem 1rem',
-                            background: '#f5f5f5',
-                            borderRadius: '0.5rem',
-                            marginBottom: '0'
-                        }}>
-                            {[
-                                'Autism Awareness Care and Training (AACT) - Accra',
-                                'Your local district hospital\'s pediatric department',
-                                'The Children\'s Hospital at Korle Bu Teaching Hospital'
-                            ].map((resource, index) => (
-                                <li key={index} style={{
-                                    padding: '0.75rem',
-                                    borderBottom: index !== 2 ? '1px solid #e0e0e0' : 'none'
-                                }}>
-                                    {resource}
-                                </li>
-                            ))}
-                        </ul>
+
                     </>
                 ) : (
                     // Near You Tab
-                    <>
-                        <button
-                            onClick={getUserLocation}
-                            style={{
-                                padding: '10px 16px',
-                                backgroundColor: '#4caf50',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                                marginTop: '1rem'
-                            }}
-                        >
-                            Find Resources Near Me
-                        </button>
-
-                        {location && (
-                            <p>
-                                Location: {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-                            </p>
-                        )}
-
-                        {error && <p style={{ color: 'red' }}>{error}</p>}
-                    </>
+                    renderNearYouTab()
                 )}
             </div>
 

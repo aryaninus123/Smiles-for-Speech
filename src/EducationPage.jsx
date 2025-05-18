@@ -61,7 +61,7 @@ const RESOURCES = [
             {
                 name: 'Autism Awareness Centre',
                 url: 'https://autismawarenesscentre.com/resources/autism-awareness-care-training-aact-ghana/',
-                description: 'Provides support, training, and resources for families with autistic childrenin Ghana'
+                description: 'Provides support, training, and resources for families with autistic children in Ghana'
             },
             {
                 name: 'Autism Awareness Care and Training',
