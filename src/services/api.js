@@ -171,7 +171,13 @@ export const screeningAPI = {
   getQuestions: () => fetchWithAuth('/screenings/questions'),
 
   // Get screenings for a profile
-  getScreeningsByProfile: (profileId) => fetchWithAuth(`/screenings/profile/${profileId}`),
+  getScreeningsByProfile: (profileId) => {
+    // Allow for cache-busting parameter in profile ID
+    const endpoint = profileId.includes('?') 
+      ? `/screenings/profile/${profileId}` 
+      : `/screenings/profile/${profileId}`;
+    return fetchWithAuth(endpoint);
+  },
 
   // Get a single screening
   getScreening: (id) => fetchWithAuth(`/screenings/${id}`),
@@ -183,6 +189,14 @@ export const screeningAPI = {
   createScreening: (screeningData) => {
     return fetchWithAuth('/screenings', {
       method: 'POST',
+      body: JSON.stringify(screeningData),
+    });
+  },
+  
+  // Update a screening
+  updateScreening: (id, screeningData) => {
+    return fetchWithAuth(`/screenings/${id}`, {
+      method: 'PUT',
       body: JSON.stringify(screeningData),
     });
   },

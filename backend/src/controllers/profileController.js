@@ -125,6 +125,17 @@ const createProfile = async (req, res) => {
   }
 };
 
+// Helper function to remove undefined values from an object
+const removeUndefinedValues = (obj) => {
+  const result = {};
+  Object.keys(obj).forEach(key => {
+    if (obj[key] !== undefined) {
+      result[key] = obj[key];
+    }
+  });
+  return result;
+};
+
 /**
  * Update a child profile
  * @route PUT /api/profiles/:id
@@ -132,7 +143,8 @@ const createProfile = async (req, res) => {
  */
 const updateProfile = async (req, res) => {
   try {
-    const { name, birthDate, gender, developmentHistory, photoUrl } = req.body;
+    // Filter out undefined values from the request body
+    const filteredBody = removeUndefinedValues(req.body);
     
     // Check if profile exists
     const profileRef = profilesCollection.doc(req.params.id);
@@ -154,16 +166,20 @@ const updateProfile = async (req, res) => {
       });
     }
     
-    // Update profile
+    // Create updatedData object using filtered body values or existing profile values
     const updatedData = {
-      name: name || profileData.name,
-      birthDate: birthDate || profileData.birthDate,
-      gender: gender || profileData.gender,
-      developmentHistory: developmentHistory || profileData.developmentHistory,
-      photoUrl: photoUrl || profileData.photoUrl,
       updatedAt: new Date().toISOString()
     };
     
+    // Only set properties that exist in the filtered body or fallback to existing values
+    if ('name' in filteredBody) updatedData.name = filteredBody.name;
+    if ('birthDate' in filteredBody) updatedData.birthDate = filteredBody.birthDate;
+    if ('gender' in filteredBody) updatedData.gender = filteredBody.gender;
+    if ('developmentHistory' in filteredBody) updatedData.developmentHistory = filteredBody.developmentHistory;
+    if ('photoUrl' in filteredBody) updatedData.photoUrl = filteredBody.photoUrl;
+    if ('latestAssessmentId' in filteredBody) updatedData.latestAssessmentId = filteredBody.latestAssessmentId;
+    
+    console.log('Updating profile with data:', updatedData);
     await profileRef.update(updatedData);
     
     res.status(200).json({

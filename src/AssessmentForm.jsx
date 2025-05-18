@@ -150,6 +150,10 @@ function AssessmentForm() {
                 if (result && result.data) {
                     setSavedResult(result.data);
 
+                    // Set flag to trigger refresh when user eventually returns to profile page
+                    sessionStorage.setItem('refreshProfileAfterAssessment', 'true');
+                    sessionStorage.setItem('forceRefreshAI', 'true');
+
                     // Redirect to the results page with the assessment ID
                     history.push(`/results/${result.data.id}`);
 

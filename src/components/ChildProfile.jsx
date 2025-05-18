@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import { uploadAPI, profilesAPI } from '../services/api';
 import { screeningAPI } from '../services/api';
 
@@ -23,6 +23,7 @@ function ChildProfile({
     const [success, setSuccess] = useState('');
     const [latestAssessmentId, setLatestAssessmentId] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
+    const history = useHistory();
 
     // Set latestAssessmentId from parent when it changes
     React.useEffect(() => {
@@ -44,31 +45,76 @@ function ChildProfile({
     React.useEffect(() => {
         if (selectedChild && selectedChild.id) {
             console.log(`Fetching assessments for child ID: ${selectedChild.id}`);
-
-            const fetchLatestAssessment = async () => {
-                try {
-                    const response = await screeningAPI.getScreeningsByProfile(selectedChild.id);
-                    console.log('Assessment response:', response);
-
-                    if (response && response.data && response.data.length > 0) {
-                        // Get the latest assessment (first in the array, assuming it's sorted by date)
-                        const latestAssessment = response.data[0];
-                        console.log('Latest assessment found:', latestAssessment);
-                        setLatestAssessmentId(latestAssessment.id);
-                        console.log(`Set latestAssessmentId to: ${latestAssessment.id}`);
-                    } else {
-                        console.log('No assessments found for this child');
-                        setLatestAssessmentId(null);
-                    }
-                } catch (error) {
-                    console.error('Error fetching assessment ID:', error);
-                    setLatestAssessmentId(null);
-                }
-            };
-
+            
+            // Create fetch function that can be called directly
             fetchLatestAssessment();
         }
     }, [selectedChild]);
+
+    // Extract fetchLatestAssessment to be callable directly for refreshing
+    const fetchLatestAssessment = async () => {
+        if (!selectedChild || !selectedChild.id) return;
+        
+        try {
+            // Add cache busting parameter to avoid stale data
+            const timestamp = new Date().getTime();
+            const response = await screeningAPI.getScreeningsByProfile(
+                `${selectedChild.id}?nocache=${timestamp}`
+            );
+            console.log('Assessment response:', response);
+
+            if (response && response.data && response.data.length > 0) {
+                // Sort to ensure we have the latest assessment
+                const sortedAssessments = [...response.data].sort((a, b) => 
+                    new Date(b.createdAt) - new Date(a.createdAt)
+                );
+                
+                // Get the latest assessment (first in the array, assuming it's sorted by date)
+                const latestAssessment = sortedAssessments[0];
+                console.log('Latest assessment found:', latestAssessment);
+                setLatestAssessmentId(latestAssessment.id);
+                console.log(`Set latestAssessmentId to: ${latestAssessment.id}`);
+            } else {
+                console.log('No assessments found for this child');
+                setLatestAssessmentId(null);
+            }
+        } catch (error) {
+            console.error('Error fetching assessment ID:', error);
+            setLatestAssessmentId(null);
+        }
+    };
+
+    // Add a function to handle taking a new assessment
+    const handleTakeAssessment = () => {
+        if (selectedChild && selectedChild.id) {
+            // Set a flag to trigger refresh when user returns from assessment
+            sessionStorage.setItem('refreshProfileAfterAssessment', 'true');
+            sessionStorage.setItem('forceRefreshAI', 'true');
+            
+            // Use React Router's history to navigate instead of window.location
+            history.push(`/assessment/${selectedChild.id}`);
+        }
+    };
+
+    // Check for refresh flag when component mounts
+    React.useEffect(() => {
+        const shouldRefresh = sessionStorage.getItem('refreshProfileAfterAssessment');
+        if (shouldRefresh) {
+            console.log('Detected return from assessment, refreshing data...');
+            sessionStorage.removeItem('refreshProfileAfterAssessment');
+            
+            // Set refreshing state to true (can use for UI indicator)
+            setRefreshing(true);
+            
+            // Add a small delay to ensure the backend has processed the assessment
+            setTimeout(() => {
+                // Fetch fresh data
+                fetchLatestAssessment().finally(() => {
+                    setRefreshing(false);
+                });
+            }, 500);
+        }
+    }, []);
 
     const getDefaultAvatar = (name) => {
         return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAPFBMVEXk5ueutLepsLPo6uursbXJzc/p6+zj5ea2u76orrKvtbi0ubzZ3N3O0dPAxcfg4uPMz9HU19i8wcPDx8qKXtGiAAAFTElEQVR4nO2d3XqzIAyAhUD916L3f6+f1m7tVvtNINFg8x5tZ32fQAIoMcsEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQTghAJD1jWtnXJPP/54IgNzZQulSmxvTH6oYXX4WS+ivhTbqBa1r26cvCdCu6i0YXbdZ0o4A1rzV+5IcE3YE+z58T45lqo7g1Aa/JY5tgoqQF3qb382x7lNzBLcxft+O17QUYfQI4IIeklKsPSN4i6LKj/7Zm8n99RbHJpEw9gEBXNBpKIYLJqKYRwjOikf//r+J8ZsVuacbqCMNleI9TqGLGqMzhnVdBOdd6F/RlrFijiCoVMk320CBIahUxTWI0KKEcJqKbMdpdJb5QvdHq6wCI5qhKlgGMS/RBHkubWDAE+QZxB4xhCyDiDkLZxgGEVdQldzSKbTIhmZkFkSEPcVvmBn2SMuZB9od7fQDsMiDdKJjFUSCQarM5WirZ3C2TT/htYnyPcPfgrFHWz0BI74gr6J/IZiGUxAZGQLqmvQLTrtE/Go4YxhVRIpEw+sww1IIcqr5NKmUUzLF3d4/qPkYIp2T/obPuemlojFUR4t9Q2Vojhb7BmgElWHzLPH8hucfpefPNFTVgs9h1AdU/Pin96vwWbWdf+X9Absn3OdO34aMdsDnP8WgKYisTqI6CkNGqZQo1XA6Ef6AU32SJzOcBukHPF07/xNSgmHKa5BOhtezv6mA/rYJpwXNAnbRZ1XuF3BzDcO3vpA3+ny2909gbqE4hhD3LIPhLLyBNhPZvbZ3B+3tPYa18A7auSlXQayKwTPNLKDcuOB0xPYKDPFTkWsevQPRZ1J8Hji9I1KQ34r7hZhrwNwOZ97QxNx0drwn4QI0wQk1DcEsfKCWKdxVvxPSNUIp/knmAXT+nT+Ko3+0H96rcNb3m1fx7MBTJdeBJ7uFcWsc0wvgAsC4pROW0l2inbAmIBv/7GZmuhQH6API2rr8T0e6yuZJ+80A9LZeG62T3tik31XwxtwZcizKuTHkMjB1WdZde4Kmic/A5ZI3rr1ae21d08PlVHYfAaxw9G9CYRbJ+8ZdbTcMRV1XM3VdF0M32vtoTdZ0+u29s0OttJ5bz64UwinjaFMVY9vkqc3KKSxN21Xl+0L4Q3Vuv1tYl0pqnX6ms4XetFz7gdZVAgUEoJntfOUe4ZwsHd9FzqQ3Vv6xe41l0XJcqcKl6TZvlv7ClAW3BsqQW4X7ypApB8dmTgK4IX5wvqIVj33HtD2qSG4BqznxdIefL27Y4sahi0MdIdvUsDva8agGGbCtITmCY31MHD2O0uIdh/0rJDQ1VX5Zdxz3rR2QDbv6qXl9vudzqQtGm1Jv9LDXOsfvvB7VcZ8PDKD0mQ1VHPYQ9O+Yj4hR1IUD8rBnn3ho2m8oQMxbCFiKlL2ioSW5heeJqegED52CzxCtcGD3Kv8Wms9EYLyUhwaFIhSMBClevWEmiK/Iaogu4H7sg6ppQhQG8RUqivuTGOAJOg6FfgW0q0M0PQMRMEgXaeNf3SYDZ8PIMI0+wHgr/MgN7wYwpiLjCCqM6ydUDZLQiB6nDdNC8SDyig3jPPpFXGcC9O8BUBDVmgBY59E7Md/35Loe/UVEECEJwYggJjELZ4J71SaQSBeC02n4Da29CayJNA28SAhd2CQyC1Xw6pSmGSINQVuMhAZp4DClan9MgmkDDNmezqwS8sgtlXK/EPBhoaSmYVC/F7IO1jQEdHOlabpKh3+jzLQSTUiq4X2I+Ip/zU8rlaqAvkS21ElR+gqu3zbjjL+hIAiCIAiCIAiCIAiCsCf/AKrfVhSbvA+DAAAAAElFTkSuQmCC";
@@ -335,43 +381,49 @@ function ChildProfile({
 
                 {/* Assessment Button */}
                 <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                    <Link to={`/assessment/${selectedChild.id}`} style={{ textDecoration: 'none' }}>
-                        <button
-                            style={{
-                                background: '#cd2026',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '0.5rem',
-                                padding: '0.75rem 1.5rem',
-                                fontSize: '1rem',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                transition: 'all 0.2s ease'
-                            }}
-                            onMouseOver={(e) => {
-                                e.currentTarget.style.backgroundColor = '#cd2026';
-                                e.currentTarget.style.transform = 'scale(1.02)';
-                            }}
-                            onMouseOut={(e) => {
-                                e.currentTarget.style.backgroundColor = '#cd2026';
-                                e.currentTarget.style.transform = 'scale(1)';
-                            }}
-                        >
-                            Take Assessment!
-                        </button>
-                    </Link>
+                    <button 
+                        style={{
+                            backgroundColor: '#e53935',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '0.5rem',
+                            padding: '0.75rem 1.5rem',
+                            fontSize: '1.1rem',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 4px rgba(229, 57, 53, 0.3)',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onClick={handleTakeAssessment}
+                        disabled={refreshing}
+                        onMouseOver={(e) => {
+                            e.currentTarget.style.backgroundColor = '#d32f2f';
+                            e.currentTarget.style.transform = 'scale(1.02)';
+                        }}
+                        onMouseOut={(e) => {
+                            e.currentTarget.style.backgroundColor = '#e53935';
+                            e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                    >
+                        {refreshing ? 'Loading...' : 'Take Assessment!'}
+                    </button>
                 </div>
-
-
             </section >
 
             {/* Summary Section */}
-            < section style={{ marginBottom: '0.5rem' }
-            }>
+            <section style={{ marginBottom: '0.5rem' }}>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f9c32b', marginBottom: '0.5rem' }}>Summary</h3>
-                <div style={{ background: '#f9f9f9', borderRadius: '0.5rem', padding: '1rem', color: '#333', minHeight: '2.5rem' }}>{summary}</div>
-            </section >
+                <div style={{ 
+                    background: '#f9f9f9', 
+                    borderRadius: '0.5rem', 
+                    padding: '1rem', 
+                    color: '#333', 
+                    minHeight: '2.5rem',
+                    whiteSpace: 'pre-line', // This helps preserve line breaks
+                }}>
+                    {summary}
+                </div>
+            </section>
 
             <div style={{ textAlign: 'center', marginTop: '1rem' }}>
                 {console.log('Rendering Next Steps button, assessmentId:', assessmentId)}

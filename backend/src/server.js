@@ -23,6 +23,7 @@ app.use('/api/profiles', require('./routes/profileRoutes'));
 app.use('/api/screenings', require('./routes/screeningRoutes'));
 app.use('/api/resources', require('./routes/resourceRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/ai', require('./routes/aiRoutes'));
 
 // Default route
 app.get('/', (req, res) => {

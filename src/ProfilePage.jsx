@@ -40,6 +40,8 @@ function ProfilePage() {
     // Add a state for any messages related to child deletion
     const [childActionStatus, setChildActionStatus] = useState({ message: '', type: '' });
 
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -118,14 +120,60 @@ function ProfilePage() {
             if (selectedChild.id) {
                 const fetchAssessments = async () => {
                     try {
-                        const assessmentsResponse = await screeningAPI.getScreeningsByProfile(selectedChild.id);
+                        // Force fresh data from server with cache-busting query parameter
+                        const timestamp = new Date().getTime();
+                        console.log(`Fetching assessments with cache buster: ${timestamp}`);
+                        const assessmentsResponse = await screeningAPI.getScreeningsByProfile(
+                            `${selectedChild.id}?nocache=${timestamp}`
+                        );
+
+                        // Check if we got a response - log full response to help debug
+                        console.log('Assessment API response:', assessmentsResponse);
 
                         if (assessmentsResponse && assessmentsResponse.data && assessmentsResponse.data.length > 0) {
-                            // Set test result if available
-                            const latestAssessment = assessmentsResponse.data[0]; // Assuming sorted by date
+                            // Sort assessments by date to ensure latest is first
+                            const sortedAssessments = [...assessmentsResponse.data].sort((a, b) => 
+                                new Date(b.createdAt) - new Date(a.createdAt)
+                            );
+                            
+                            console.log('Sorted assessments by date:', 
+                                sortedAssessments.map(a => ({
+                                    id: a.id, 
+                                    date: a.createdAt,
+                                    answers: Object.keys(a.answers || {}).length
+                                }))
+                            );
+                            
+                            const latestAssessment = sortedAssessments[0];
+                            console.log('Using latest assessment:', latestAssessment.id, 'created at', latestAssessment.createdAt);
+
+                            // Always recalculate risk level from answers for consistency
+                            let riskLevelToShow = latestAssessment.riskLevel;
+                            
+                            // Count concerning responses (never/rarely)
+                            if (latestAssessment.answers) {
+                                let concerningCount = 0;
+                                Object.values(latestAssessment.answers).forEach(answer => {
+                                    const lowerAnswer = (answer || '').toLowerCase();
+                                    if (lowerAnswer === 'never' || lowerAnswer === 'rarely') {
+                                        concerningCount++;
+                                    }
+                                });
+                                
+                                // Use the same MCHAT-inspired thresholds as in ResultsSummary
+                                if (concerningCount >= 8) riskLevelToShow = 'High';
+                                else if (concerningCount >= 4) riskLevelToShow = 'Medium';
+                                else riskLevelToShow = 'Low';
+                                
+                                console.log('Profile risk calculation:', {
+                                    originalLevel: latestAssessment.riskLevel,
+                                    calculatedLevel: riskLevelToShow,
+                                    concerningCount
+                                });
+                            }
 
                             if (latestAssessment.createdAt) {
-                                setTestResult(`Risk Level: ${latestAssessment.riskLevel || 'Unknown'} (${new Date(latestAssessment.createdAt).toLocaleDateString()})`);
+                                setTestResult(`Risk Level: ${riskLevelToShow || 'Unknown'} (${new Date(latestAssessment.createdAt).toLocaleDateString()})`);
                             } else {
                                 setTestResult('Assessment result found.');
                             }
@@ -145,10 +193,79 @@ function ProfilePage() {
                             }
 
                             // Set summary if available
-                            if (latestAssessment.recommendations && latestAssessment.recommendations.length > 0) {
+                            if (latestAssessment.aiSummary && latestAssessment.aiSummary.overallSummary) {
+                                // Use AI-generated summary if available
+                                setSummary(latestAssessment.aiSummary.overallSummary);
+                                console.log('Using AI-generated summary:', latestAssessment.aiSummary.overallSummary);
+                            } else if (latestAssessment.recommendations && latestAssessment.recommendations.length > 0) {
+                                // Fall back to recommendations if no AI summary
                                 setSummary(latestAssessment.recommendations.join('\n'));
+                                console.log('Using recommendations as summary');
                             } else {
-                                setSummary('No specific recommendations available.');
+                                // If no summary or recommendations found, provide custom summary based on risk level
+                                try {
+                                    console.log('No summary found in assessment data, fetching from results endpoint...');
+                                    const resultResponse = await screeningAPI.getScreeningById(latestAssessment.id);
+                                    
+                                    if (resultResponse?.data?.aiSummary?.overallSummary) {
+                                        setSummary(resultResponse.data.aiSummary.overallSummary);
+                                        console.log('Retrieved AI summary from direct fetch:', resultResponse.data.aiSummary.overallSummary);
+                                        
+                                        // Update the assessment in the database with the AI summary for future use
+                                        try {
+                                            await screeningAPI.updateScreening(latestAssessment.id, {
+                                                aiSummary: resultResponse.data.aiSummary
+                                            });
+                                            console.log('Updated assessment with AI summary');
+                                        } catch (updateError) {
+                                            console.error('Error updating assessment with AI summary:', updateError);
+                                        }
+                                    } else {
+                                        // Set default summary based on risk level
+                                        if (riskLevelToShow === 'Low') {
+                                            // Custom positive message for Low risk level
+                                            setSummary(
+                                                'Your child is showing typical development patterns\n' +
+                                                'Continue engaging in interactive play and communication activities\n' +
+                                                'Celebrate your child\'s social communication strengths\n' +
+                                                'Regular developmental check-ups are still recommended'
+                                            );
+                                            console.log('Using custom Low risk summary');
+                                        } else {
+                                            // Default message for Medium and High risk levels
+                                            setSummary(
+                                                'The screening results suggest monitoring your child\'s development\n' +
+                                                'Consider discussing these observations with a healthcare professional\n' +
+                                                'Engage in activities that strengthen social communication skills\n' +
+                                                'Schedule a follow-up assessment in 3-6 months'
+                                            );
+                                            console.log('Using default Medium/High risk summary');
+                                        }
+                                    }
+                                } catch (fetchError) {
+                                    console.error('Error fetching detailed assessment:', fetchError);
+                                    
+                                    // Even with fetch error, provide risk-appropriate summary
+                                    if (riskLevelToShow === 'Low') {
+                                        // Custom positive message for Low risk level
+                                        setSummary(
+                                            'Your child is showing typical development patterns\n' +
+                                            'Continue engaging in interactive play and communication activities\n' +
+                                            'Celebrate your child\'s social communication strengths\n' +
+                                            'Regular developmental check-ups are still recommended'
+                                        );
+                                        console.log('Using custom Low risk summary after fetch error');
+                                    } else {
+                                        // Default message for Medium and High risk levels
+                                        setSummary(
+                                            'The screening results suggest monitoring your child\'s development\n' +
+                                            'Consider discussing these observations with a healthcare professional\n' +
+                                            'Engage in activities that strengthen social communication skills\n' +
+                                            'Schedule a follow-up assessment in 3-6 months'
+                                        );
+                                        console.log('Using default Medium/High risk summary after fetch error');
+                                    }
+                                }
                             }
                         } else {
                             setLatestAssessmentId(null);
@@ -169,7 +286,33 @@ function ProfilePage() {
             setSummary('No Summary Available');
             setLatestAssessmentId(null);
         }
-    }, [selectedChild]);
+    }, [selectedChild, refreshTrigger]);
+
+    // Add a listener for history changes to detect when coming back from results
+    useEffect(() => {
+        // When the user navigates back to the profile page from results
+        const unlisten = history.listen((location) => {
+            // Check if we're navigating to the profile page
+            if (location.pathname.includes('/profile')) {
+                console.log('Navigated to profile page, checking if refresh needed');
+                
+                // Check for refresh flags
+                const shouldRefresh = sessionStorage.getItem('refreshProfileAfterAssessment');
+                if (shouldRefresh) {
+                    console.log('Detected return from assessment via navigation, triggering refresh');
+                    sessionStorage.removeItem('refreshProfileAfterAssessment');
+                    
+                    // Force a refresh after a slight delay to ensure backend data is available
+                    setTimeout(() => {
+                        setRefreshTrigger(prev => prev + 1);
+                    }, 500);
+                }
+            }
+        });
+        
+        // Clean up listener
+        return () => unlisten();
+    }, [history]);
 
     const handleResendVerification = async () => {
         try {
