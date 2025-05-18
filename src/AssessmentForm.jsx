@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import ResultsSummary from './ResultsSummary';
-import { screeningAPI } from './services/api';
+import { screeningAPI, profilesAPI } from './services/api';
 
 // Fallback questions if API fails
 const FALLBACK_QUESTIONS = [
@@ -36,7 +36,7 @@ const FALLBACK_QUESTIONS = [
     {
         id: 8,
         text: 'Does your child show you things just to share?',
-    },  
+    },
     {
         id: 9,
         text: 'Does your child point, wave, or nod?',
@@ -54,7 +54,7 @@ const CHOICES = [
     { value: 'rarely', label: 'Rarely', color: '#FF9800', hoverColor: '#F57C00' },   // Orange
     { value: 'never', label: 'Never', color: '#f44336', hoverColor: '#d32f2f' }     // Red
 ];
-    
+
 
 function AssessmentForm() {
     const { profileId } = useParams();
@@ -104,13 +104,13 @@ function AssessmentForm() {
             const formattedId = id.toString().startsWith('q') ? id : `q${id}`;
             formattedAnswersForBackend[formattedId] = value;
         });
-        
+
         // Convert answers to format expected by ResultsSummary component
         const formattedAnswersForDisplay = Object.entries(answers).map(([id, value]) => ({
             id: id.toString().startsWith('q') ? id : `q${id}`,
             answer: value
         }));
-        
+
         if (profileId) {
             setSavingResult(true);
             try {
@@ -120,22 +120,40 @@ function AssessmentForm() {
                     answers: formattedAnswersForBackend,
                     notes
                 });
-                
+
                 if (result && result.data) {
                     setSavedResult(result.data);
+
+                    // Redirect to the results page with the assessment ID
+                    history.push(`/results/${result.data.id}`);
+
+                    // Update the latest assessment ID in the child profile
+                    try {
+                        await profilesAPI.updateProfile(profileId, {
+                            latestAssessmentId: result.data.id
+                        });
+                        console.log(`Stored latestAssessmentId ${result.data.id} in child profile ${profileId}`);
+                    } catch (updateError) {
+                        console.error('Error updating profile with assessment ID:', updateError);
+                        // Continue with redirection even if this update fails
+                    }
+
+                    return; // Exit early after redirection
                 }
             } catch (err) {
                 console.error('Error saving screening result:', err);
                 setError('Failed to save results to server, but you can still view them.');
+                // Still show results even if save failed
+                setShowResults(true);
             } finally {
                 setSavingResult(false);
             }
+        } else {
+            // If no profileId, just show results without saving
+            setShowResults(true);
         }
-        
-        // Show results
-        setShowResults(true);
     };
-    
+
     const handleBack = () => {
         if (profileId) {
             history.push(`/profile/${profileId}`);
@@ -154,11 +172,11 @@ function AssessmentForm() {
 
     if (showResults) {
         return (
-            <ResultsSummary 
-                answers={Object.entries(answers).map(([id, value]) => ({ 
+            <ResultsSummary
+                answers={Object.entries(answers).map(([id, value]) => ({
                     id: id.toString().startsWith('q') ? id : `q${id}`,
-                    answer: value 
-                }))} 
+                    answer: value
+                }))}
                 savedResult={savedResult}
                 onBack={handleBack}
             />
@@ -172,21 +190,21 @@ function AssessmentForm() {
     return (
         <>
             <h1 style={{ fontSize: '1.5rem', textAlign: 'center', fontWeight: 600, color: '#333', marginBottom: '2rem', marginTop: '2rem' }}>Questionnaire</h1>
-            
+
             {error && (
-                <div style={{ 
-                    maxWidth: '44rem', 
-                    margin: '0 auto 2rem auto', 
-                    padding: '0.75rem 1rem', 
-                    background: '#ffebee', 
-                    color: '#c62828', 
+                <div style={{
+                    maxWidth: '44rem',
+                    margin: '0 auto 2rem auto',
+                    padding: '0.75rem 1rem',
+                    background: '#ffebee',
+                    color: '#c62828',
                     borderRadius: '0.5rem',
                     border: '1px solid #ef9a9a'
                 }}>
                     {error}
                 </div>
             )}
-            
+
             <div style={{ maxWidth: '44rem', margin: '2rem auto', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '2rem' }}>
                 <div style={{ marginBottom: '2rem' }}>
                     <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Progress: {numAnswered} / {questions.length}</div>
@@ -201,17 +219,17 @@ function AssessmentForm() {
                             <div style={{ fontWeight: 600, color: '#111', marginBottom: '0.75rem', fontSize: '1.1rem' }}>{idx + 1}. {q.text}</div>
                             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                                 {CHOICES.map(choice => (
-                                    <label 
-                                        key={choice.value} 
-                                        style={{ 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            cursor: 'pointer', 
-                                            fontWeight: 500, 
+                                    <label
+                                        key={choice.value}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            cursor: 'pointer',
+                                            fontWeight: 500,
                                             color: answers[q.id] === choice.value ? '#fff' : '#333',
                                             background: answers[q.id] === choice.value ? choice.color : '#f6f6f6',
-                                            borderRadius: '0.5rem', 
-                                            padding: '0.5rem 1rem', 
+                                            borderRadius: '0.5rem',
+                                            padding: '0.5rem 1rem',
                                             border: answers[q.id] === choice.value ? `2px solid ${choice.color}` : '1px solid #ccc',
                                             transition: 'all 0.2s',
                                             '&:hover': {
@@ -234,7 +252,7 @@ function AssessmentForm() {
                             </div>
                         </div>
                     ))}
-                    
+
                     {profileId && (
                         <div style={{ marginBottom: '2rem' }}>
                             <label htmlFor="notes" style={{ display: 'block', fontWeight: 600, marginBottom: '0.75rem' }}>
@@ -257,9 +275,9 @@ function AssessmentForm() {
                             />
                         </div>
                     )}
-                    
+
                     <div style={{ marginTop: '2rem', textAlign: 'center', display: 'flex', justifyContent: 'space-between' }}>
-                        <button 
+                        <button
                             onClick={handleBack}
                             style={{
                                 background: '#f5f5f5',
@@ -275,8 +293,8 @@ function AssessmentForm() {
                         >
                             Cancel
                         </button>
-                        
-                        <button 
+
+                        <button
                             onClick={handleSubmit}
                             disabled={!isFormComplete || savingResult}
                             style={{

@@ -7,6 +7,7 @@ import AboutPage from './AboutPage';
 import SignUpPage from './SignUpPage';
 import ProfilePage from './ProfilePage';
 import AssessmentForm from './AssessmentForm';
+import ResultsPage from './ResultsPage';
 import VerifyEmail from './VerifyEmail';
 import ForgotPassword from './ForgotPassword';
 import ResetPassword from './ResetPassword';
@@ -30,7 +31,8 @@ function App() {
           
           {/* Protected routes - require authentication */}
           <ProtectedRoute path="/profile" component={ProfilePage} />
-          <ProtectedRoute path="/assessment" component={AssessmentForm} />
+          <ProtectedRoute path="/assessment/:profileId?" component={AssessmentForm} />
+          <ProtectedRoute path="/results/:id" component={ResultsPage} />
         </Switch>
       </Layout>
     </Router>
