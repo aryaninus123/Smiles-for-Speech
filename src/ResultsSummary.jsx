@@ -21,7 +21,7 @@ const getSummaryForGroup = (counts) => {
     const positiveResponses = (counts.always || 0) + (counts.often || 0);
     // Consider "never" and "rarely" as concerning indicators
     const negativeResponses = (counts.never || 0) + (counts.rarely || 0);
-    
+
     if (positiveResponses >= total / 2) return "Your child shows typical behaviors in this area.";
     if (negativeResponses >= total / 2) return "Some behaviors may be delayed. Consider speaking to a specialist.";
     return "Your child may be developing these skills. Keep observing.";
@@ -33,7 +33,7 @@ const getOverallSummary = (totalCounts) => {
     const positiveResponses = (totalCounts.always || 0) + (totalCounts.often || 0);
     // Consider "never" and "rarely" as concerning indicators
     const negativeResponses = (totalCounts.never || 0) + (totalCounts.rarely || 0);
-    
+
     if (positiveResponses >= total / 2) {
         return "Your child shows many expected behaviors. Keep supporting their growth!";
     }
@@ -50,7 +50,7 @@ function ResultsSummary({ answers, savedResult, onBack }) {
 
     // Process answers differently based on whether they're from direct user input or savedResult
     let processedAnswers = answers;
-    
+
     // If we have savedResult, use its answers instead
     if (savedResult && savedResult.answers) {
         processedAnswers = Object.entries(savedResult.answers).map(([id, value]) => ({
@@ -58,7 +58,7 @@ function ResultsSummary({ answers, savedResult, onBack }) {
             answer: value
         }));
     }
-    
+
     // Debug the answers
     console.log("Processing answers:", processedAnswers);
 
@@ -66,10 +66,10 @@ function ResultsSummary({ answers, savedResult, onBack }) {
         categoryCounts[category] = { always: 0, often: 0, sometimes: 0, rarely: 0, never: 0 };
         questionIds.forEach(id => {
             // Find the answer for this question by ID (either numeric or string)
-            const answer = processedAnswers.find(a => 
+            const answer = processedAnswers.find(a =>
                 a.id === id || a.id === parseInt(id.replace('q', '')) || a.id.toString() === id
             )?.answer?.toLowerCase() || '';
-            
+
             if (answer) {
                 categoryCounts[category][answer.toLowerCase()]++;
                 totalCounts[answer.toLowerCase()]++;
@@ -79,22 +79,50 @@ function ResultsSummary({ answers, savedResult, onBack }) {
 
     const getPercentage = (count, total) => (total > 0 ? (count / total) * 100 : 0);
     const total = Object.values(totalCounts).reduce((a, b) => a + b, 0);
-    
+
     // Find the most common response
     const mainResponse = Object.entries(totalCounts)
-        .sort(([,a], [,b]) => b - a)
-        .filter(([,count]) => count > 0)[0]?.[0] || 'sometimes';
+        .sort(([, a], [, b]) => b - a)
+        .filter(([, count]) => count > 0)[0]?.[0] || 'sometimes';
 
     // Get risk level and recommendations from saved result if available
-    const riskLevel = savedResult?.riskLevel || 
-        ((totalCounts.always || 0) + (totalCounts.often || 0) >= total / 2 ? 'Low' : 
-         (totalCounts.never || 0) + (totalCounts.rarely || 0) >= total / 2 ? 'High' : 'Medium');
-    
+    const riskLevel = savedResult?.riskLevel ||
+        ((totalCounts.always || 0) + (totalCounts.often || 0) >= total / 2 ? 'Low' :
+            (totalCounts.never || 0) + (totalCounts.rarely || 0) >= total / 2 ? 'High' : 'Medium');
+
     const recommendations = savedResult?.recommendations || [
         'Discuss these results with your child\'s healthcare provider',
         'Continue monitoring your child\'s development',
         'Engage in face-to-face play activities that encourage social interaction',
         'Create opportunities for communication through daily activities'
+    ];
+
+    // Local speech therapy resources for the Near You tab
+    const localResources = [
+        {
+            name: 'Accra Speech Therapy Center',
+            location: 'East Legon, Accra',
+            contact: '+233 20 123 4567',
+            services: 'Speech evaluation, articulation therapy, language intervention'
+        },
+        {
+            name: 'Children\'s Communication Clinic',
+            location: 'Osu, Accra',
+            contact: '+233 24 987 6543',
+            services: 'Pediatric speech therapy, developmental assessments'
+        },
+        {
+            name: 'Korle Bu Speech and Hearing Center',
+            location: 'Korle Bu Teaching Hospital, Accra',
+            contact: '+233 30 268 3045',
+            services: 'Speech and language assessments, audiology, intervention'
+        },
+        {
+            name: 'Hope Speech Therapy',
+            location: 'Tema, Greater Accra',
+            contact: '+233 55 765 4321',
+            services: 'Early intervention, developmental language therapy'
+        }
     ];
 
     const TabButton = ({ id, label, active }) => (
@@ -121,35 +149,35 @@ function ResultsSummary({ answers, savedResult, onBack }) {
     return (
         <div style={{ maxWidth: '44rem', margin: '2rem auto', padding: '0 1rem' }}>
             <h1 style={{ fontSize: '1.5rem', textAlign: 'center', fontWeight: 600, color: '#333', marginBottom: '2rem' }}>Assessment Results</h1>
-            
+
             {/* Success Message if Result was Saved */}
             {savedResult && (
-                <div style={{ 
-                    background: '#e8f5e9', 
-                    color: '#2e7d32', 
-                    padding: '0.75rem 1rem', 
-                    borderRadius: '0.5rem', 
+                <div style={{
+                    background: '#e8f5e9',
+                    color: '#2e7d32',
+                    padding: '0.75rem 1rem',
+                    borderRadius: '0.5rem',
                     marginBottom: '1.5rem',
                     border: '1px solid #a5d6a7'
                 }}>
                     Results have been saved successfully.
                 </div>
             )}
-            
+
             {/* Quick Summary Card */}
-            <div style={{ 
-                background: '#fff', 
-                borderRadius: '1rem', 
-                boxShadow: '0 2px 8px rgba(0,0,0,0.06)', 
+            <div style={{
+                background: '#fff',
+                borderRadius: '1rem',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                 padding: '1.5rem',
                 marginBottom: '2rem',
                 border: '1px solid #e0e0e0'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                    <div style={{ 
-                        width: '4rem', 
-                        height: '4rem', 
-                        borderRadius: '50%', 
+                    <div style={{
+                        width: '4rem',
+                        height: '4rem',
+                        borderRadius: '50%',
                         background: RESPONSE_COLORS[mainResponse],
                         display: 'flex',
                         alignItems: 'center',
@@ -165,20 +193,20 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                         <p>{getOverallSummary(totalCounts)}</p>
                     </div>
                 </div>
-                
+
                 {savedResult && (
-                    <div style={{ 
-                        marginTop: '1rem', 
-                        padding: '0.75rem', 
-                        background: '#f5f5f5', 
+                    <div style={{
+                        marginTop: '1rem',
+                        padding: '0.75rem',
+                        background: '#f5f5f5',
                         borderRadius: '0.5rem',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.5rem'
                     }}>
-                        <span style={{ 
-                            fontWeight: '600', 
-                            color: riskLevel === 'Low' ? '#2e7d32' : riskLevel === 'Medium' ? '#f57c00' : '#c62828' 
+                        <span style={{
+                            fontWeight: '600',
+                            color: riskLevel === 'Low' ? '#2e7d32' : riskLevel === 'Medium' ? '#f57c00' : '#c62828'
                         }}>
                             Risk Level: {riskLevel}
                         </span>
@@ -190,12 +218,13 @@ function ResultsSummary({ answers, savedResult, onBack }) {
             <div style={{ marginBottom: '0rem' }}>
                 <TabButton id="summary" label="Detailed Results" active={activeTab === 'summary'} />
                 <TabButton id="nextSteps" label="Next Steps" active={activeTab === 'nextSteps'} />
+                <TabButton id="nearYou" label="Near You" active={activeTab === 'nearYou'} />
             </div>
 
             {/* Tab Content */}
-            <div style={{ 
-                background: '#fff', 
-                borderRadius: '0 1rem 1rem 1rem', 
+            <div style={{
+                background: '#fff',
+                borderRadius: '0 1rem 1rem 1rem',
                 border: '1px solid #e0e0e0',
                 padding: '2rem'
             }}>
@@ -233,7 +262,7 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                                 </div>
                             );
                         })}
-                        
+
                         {savedResult?.notes && (
                             <div style={{ marginTop: '2rem', padding: '1rem', background: '#f5f5f5', borderRadius: '0.5rem' }}>
                                 <h3 style={{ color: '#333', marginBottom: '0.5rem' }}>Notes</h3>
@@ -241,13 +270,13 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                             </div>
                         )}
                     </>
-                ) : (
+                ) : activeTab === 'nextSteps' ? (
                     // Next Steps Tab
                     <>
-                        <div style={{ 
-                            background: '#fff3e0', 
-                            padding: '1rem', 
-                            borderRadius: '0.5rem', 
+                        <div style={{
+                            background: '#fff3e0',
+                            padding: '1rem',
+                            borderRadius: '0.5rem',
                             borderLeft: '4px solid #f9c32b',
                             marginBottom: '1.5rem'
                         }}>
@@ -257,10 +286,10 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                         <h3 style={{ color: '#444', marginBottom: '1rem' }}>Suggested Steps</h3>
                         <ul style={{ listStyle: 'none', padding: 0, marginBottom: '2rem' }}>
                             {recommendations.map((step, index) => (
-                                <li key={index} style={{ 
-                                    marginBottom: '0.75rem', 
-                                    paddingLeft: '1.5rem', 
-                                    position: 'relative' 
+                                <li key={index} style={{
+                                    marginBottom: '0.75rem',
+                                    paddingLeft: '1.5rem',
+                                    position: 'relative'
                                 }}>
                                     <span style={{ position: 'absolute', left: 0, color: '#4CAF50' }}>•</span>
                                     {step}
@@ -269,8 +298,8 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                         </ul>
 
                         <h3 style={{ color: '#444', marginBottom: '1rem' }}>Local Resources</h3>
-                        <ul style={{ 
-                            listStyle: 'none', 
+                        <ul style={{
+                            listStyle: 'none',
                             padding: '0.5rem 1rem',
                             background: '#f5f5f5',
                             borderRadius: '0.5rem',
@@ -281,7 +310,7 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                                 'Your local district hospital\'s pediatric department',
                                 'The Children\'s Hospital at Korle Bu Teaching Hospital'
                             ].map((resource, index) => (
-                                <li key={index} style={{ 
+                                <li key={index} style={{
                                     padding: '0.75rem',
                                     borderBottom: index !== 2 ? '1px solid #e0e0e0' : 'none'
                                 }}>
@@ -290,12 +319,96 @@ function ResultsSummary({ answers, savedResult, onBack }) {
                             ))}
                         </ul>
                     </>
+                ) : (
+                    // Near You Tab
+                    <>
+                        <div style={{
+                            background: '#e3f2fd',
+                            padding: '1rem',
+                            borderRadius: '0.5rem',
+                            borderLeft: '4px solid #2196F3',
+                            marginBottom: '1.5rem'
+                        }}>
+                            <strong>Find Help Nearby:</strong> Below are speech therapy resources and specialists in your area who can provide professional evaluations and interventions.
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                            <h3 style={{ color: '#444', margin: 0 }}>Speech Therapy Centers</h3>
+                            <button
+                                style={{
+                                    background: '#f9c32b',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '0.25rem',
+                                    padding: '0.35rem 0.75rem',
+                                    fontSize: '0.85rem',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                }}
+                                onClick={() => window.open('https://maps.google.com/search?q=speech+therapy+near+me')}
+                            >
+                                View Map
+                            </button>
+                        </div>
+
+                        <div style={{ marginBottom: '2rem' }}>
+                            {localResources.map((resource, index) => (
+                                <div key={index} style={{
+                                    border: '1px solid #e0e0e0',
+                                    borderRadius: '0.5rem',
+                                    padding: '1rem',
+                                    marginBottom: '1rem'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'flex-start' }}>
+                                        <h4 style={{ margin: 0, color: '#2196F3' }}>{resource.name}</h4>
+                                        <span style={{
+                                            background: '#e8f5e9',
+                                            color: '#2e7d32',
+                                            padding: '0.15rem 0.5rem',
+                                            borderRadius: '1rem',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '600'
+                                        }}>
+                                            Open
+                                        </span>
+                                    </div>
+                                    <div style={{ color: '#666', marginBottom: '0.25rem' }}>
+                                        <i style={{ marginRight: '0.5rem' }}>📍</i> {resource.location}
+                                    </div>
+                                    <div style={{ color: '#666', marginBottom: '0.25rem' }}>
+                                        <i style={{ marginRight: '0.5rem' }}>📞</i> {resource.contact}
+                                    </div>
+                                    <div style={{ color: '#666', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                                        <strong>Services:</strong> {resource.services}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                            <p style={{ color: '#666', margin: '0' }}>Don't see a center near you?</p>
+                            <button
+                                style={{
+                                    background: 'transparent',
+                                    color: '#2196F3',
+                                    border: 'none',
+                                    padding: '0.5rem',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                    textDecoration: 'underline'
+                                }}
+                                onClick={() => window.open('https://maps.google.com/search?q=speech+therapy+near+me')}
+                            >
+                                Search more locations
+                            </button>
+                        </div>
+                    </>
                 )}
             </div>
 
             {/* Back Button */}
             <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-                <button 
+                <button
                     onClick={onBack}
                     style={{
                         background: '#f5f5f5',
@@ -312,7 +425,7 @@ function ResultsSummary({ answers, savedResult, onBack }) {
             </div>
 
             {/* Privacy Note */}
-            <div style={{ 
+            <div style={{
                 marginTop: '1rem',
                 textAlign: 'center',
                 color: '#666',
