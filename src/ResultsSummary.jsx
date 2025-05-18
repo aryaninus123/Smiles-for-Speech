@@ -39,7 +39,7 @@ const getOverallSummary = (totalCounts) => {
         return "Your child shows many expected behaviors. Keep supporting their growth!";
     }
     if (negativeResponses >= total / 2) {
-        return "This screening suggests possible signs of delay. Consider speaking to a professional.";
+        return "The screening results indicate some tendencies that may suggest a delay in development. It's recommended to discuss these observations with a healthcare professional for further guidance.";
     }
     return "You may want to continue observing your child's development.";
 };
@@ -677,13 +677,13 @@ function ResultsSummary({ answers, savedResult, onBack }) {
             </div>
 
             {/* Privacy Note */}
-            <div style={{
+            <div style={{ 
                 marginTop: '1rem',
                 textAlign: 'center',
                 color: '#666',
                 fontSize: '0.9rem'
             }}>
-                <p><em>Privacy Note: Your answers are saved securely in accordance with our privacy policy.</em></p>
+                <p><em>Privacy Note: Your assessment answers are saved securely and used to provide you with personalized summaries and recommendations. We are committed to protecting your privacy in accordance with our <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">privacy policy</a>.</em></p>
             </div>
         </div>
     );

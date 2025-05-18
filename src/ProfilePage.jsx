@@ -4,7 +4,7 @@ import { authAPI, uploadAPI, profilesAPI, screeningAPI } from './services/api';
 import { logout, getUser } from './utils/auth';
 import './ProfilePage.css';
 import ChildProfile from './components/ChildProfile';
-import { FaPen } from 'react-icons/fa';
+import { FaPen, FaTrash } from 'react-icons/fa';
 
 function ProfilePage() {
     const history = useHistory();
@@ -35,6 +35,9 @@ function ProfilePage() {
     const [editChildAge, setEditChildAge] = useState('');
     const [editChildPic, setEditChildPic] = useState('');
     const [editChildPicFile, setEditChildPicFile] = useState(null);
+
+    // Add a state for any messages related to child deletion
+    const [childActionStatus, setChildActionStatus] = useState({ message: '', type: '' });
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -144,7 +147,7 @@ function ProfilePage() {
             setTestResult('No test result available.');
             setSummary('No Summary Available');
         }
-    }, [selectedChild]);
+    }, [selectedChild, childrenList]);
 
     const handleResendVerification = async () => {
         try {
@@ -315,41 +318,48 @@ function ProfilePage() {
     };
 
     const handleDeleteChild = async (childId) => {
-        if (!childId) return;
-
-        // Confirm deletion
-        if (!window.confirm('Are you sure you want to delete this child profile? This action cannot be undone.')) {
+        if (!childId) {
+            console.error("Delete cancelled: No child ID provided.");
             return;
         }
 
-        try {
-            setLoading(true);
-            // Call the API to delete the child profile
-            await profilesAPI.deleteProfile(childId);
+        const childToDelete = childrenList.find(child => child.id === childId);
+        if (!childToDelete) {
+            console.error("Delete cancelled: Child not found in list.");
+            return;
+        }
 
-            // Update local state
-            const updatedChildren = childrenList.filter(child => child.id !== childId);
-            setChildrenList(updatedChildren);
+        if (window.confirm(`Are you sure you want to delete ${childToDelete.name}'s profile? This will also delete all associated screening results.`)) {
+            setLoading(true); // Use main loading state or a specific one for this action
+            setChildActionStatus({ message: '', type: '' });
+            try {
+                await profilesAPI.deleteProfile(childId);
+                
+                // Update children list
+                const updatedChildrenList = childrenList.filter(child => child.id !== childId);
+                setChildrenList(updatedChildrenList);
+                
+                setChildActionStatus({ message: `${childToDelete.name}'s profile deleted successfully.`, type: 'success' });
+                setTimeout(() => setChildActionStatus({ message: '', type: '' }), 4000);
 
-            // If the deleted child was selected, clear the selection
-            if (selectedChild && selectedChild.id === childId) {
-                setSelectedChild(null);
-                setTestResult('No test result available.');
-                setSummary('No summary available.');
+                // If the deleted child was selected, clear selection or select next
+                if (selectedChild && selectedChild.id === childId) {
+                    if (updatedChildrenList.length > 0) {
+                        setSelectedChild(updatedChildrenList[0]);
+                    } else {
+                        setSelectedChild(null);
+                        setTestResult('No test result available.'); // Reset these as well
+                        setSummary('No Summary Available');
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error deleting child profile:', error);
+                setChildActionStatus({ message: `Error deleting profile: ${error.message || 'Unknown error'}`, type: 'error' });
+                setTimeout(() => setChildActionStatus({ message: '', type: '' }), 4000);
+            } finally {
+                setLoading(false);
             }
-
-            setSidebarSuccess('Child profile deleted successfully!');
-            setTimeout(() => {
-                setSidebarSuccess('');
-            }, 3000);
-        } catch (error) {
-            console.error('Error deleting child profile:', error);
-            setSidebarError('Failed to delete child profile: ' + (error.message || 'Unknown error'));
-            setTimeout(() => {
-                setSidebarError('');
-            }, 5000);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -665,12 +675,44 @@ function ProfilePage() {
                                             borderRadius: '4px',
                                             display: 'flex',
                                             justifyContent: 'space-between',
-                                            alignItems: 'center'
+                                            alignItems: 'center',
+                                            cursor: 'pointer'
                                         }}
-                                        onClick={() => handleSelectChild(child)}
                                     >
-                                        <div style={{ fontWeight: '600' }}>{child.name}</div>
-                                        <div style={{ color: '#666' }}>Age: {child.age}</div>
+                                        <div onClick={() => handleSelectChild(child)} style={{ flexGrow: 1, fontWeight: '600' }}>{child.name}</div>
+                                        <div onClick={() => handleSelectChild(child)} style={{ color: '#666', marginRight: '10px' }}>Age: {child.age}</div>
+                                        <button 
+                                            onClick={(e) => { 
+                                                e.stopPropagation();
+                                                handleDeleteChild(child.id); 
+                                            }}
+                                            title={`Delete ${child.name}`}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                color: '#dc3545',
+                                                cursor: 'pointer',
+                                                padding: '5px'
+                                            }}
+                                        >
+                                            <FaTrash style={{ fontSize: '0.9rem' }} />
+                                        </button>
+                                        <button 
+                                            onClick={(e) => { 
+                                                e.stopPropagation();
+                                                handleEditChild(child); 
+                                            }}
+                                            title={`Edit ${child.name}`}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                color: '#f9c32b',
+                                                cursor: 'pointer',
+                                                padding: '5px'
+                                            }}
+                                        >
+                                            <FaPen style={{ fontSize: '0.9rem' }} />
+                                        </button>
                                     </div>
                                 ))}
                             </div>
@@ -688,6 +730,22 @@ function ProfilePage() {
                     padding: '20px'
                 }}>
                     <section style={{ maxWidth: '28rem', width: '100%', background: '#fff', borderRadius: '1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '2rem', margin: '0 auto' }}>
+                        {/* Display childActionStatus here */}
+                        {childActionStatus.message && (
+                            <div style={{ 
+                                padding: '10px', 
+                                marginBottom: '15px', 
+                                borderRadius: '4px', 
+                                fontSize: '0.95rem',
+                                background: childActionStatus.type === 'success' ? '#e8f5e9' : '#ffebee', 
+                                color: childActionStatus.type === 'success' ? '#2e7d32' : '#c62828',
+                                border: `1px solid ${childActionStatus.type === 'success' ? '#a5d6a7' : '#ef9a9a'}`,
+                                textAlign: 'center'
+                            }}>
+                                {childActionStatus.message}
+                            </div>
+                        )}
+
                         {selectedChild ? (
                             <div className="sfs-profile-grid">
                                 {/* Child Profile Display */}
@@ -699,6 +757,7 @@ function ProfilePage() {
                                     onSaveChild={handleSaveChild}
                                     onCancelEdit={handleCancelChildEdit}
                                     editingChild={editingChild}
+                                    onDeleteChild={handleDeleteChild}
                                 />
                             </div>
                         ) : (

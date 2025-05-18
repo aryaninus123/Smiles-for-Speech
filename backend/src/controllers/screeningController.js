@@ -364,9 +364,9 @@ const getScreeningQuestions = async (req, res) => {
       },
       {
         id: 'q8',
-        text: 'Would you describe your child\'s first words as:',
-        type: 'single',
-        options: ['Typical', 'Unusual', 'No words yet']
+        text: 'Does your child focus a lot on a few favorite toys or activities, and not play with many other things?',
+        type: 'frequency',
+        options: ['Never', 'Rarely', 'Sometimes', 'Often', 'Always']
       },
       {
         id: 'q9',

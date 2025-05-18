@@ -2,6 +2,7 @@ const { db } = require('../config/firebase');
 
 // Child profiles collection reference
 const profilesCollection = db.collection('childProfiles');
+const screeningsCollection = db.collection('screenings');
 
 /**
  * Get all child profiles for a parent
@@ -189,38 +190,52 @@ const updateProfile = async (req, res) => {
  */
 const deleteProfile = async (req, res) => {
   try {
-    // Check if profile exists
-    const profileRef = profilesCollection.doc(req.params.id);
+    const profileId = req.params.id;
+    const profileRef = profilesCollection.doc(profileId);
     const profileDoc = await profileRef.get();
-    
+
     if (!profileDoc.exists) {
       return res.status(404).json({
         success: false,
         error: 'Profile not found'
       });
     }
-    
-    // Check if user owns this profile
+
     const profileData = profileDoc.data();
-    if (profileData.parentUid !== req.user.uid) {
+    if (profileData.parentUid !== req.user.uid) { 
       return res.status(403).json({
         success: false,
         error: 'Not authorized to delete this profile'
       });
     }
+
+    // Batch delete for screenings
+    const batch = db.batch();
+
+    // Find and delete associated screenings
+    const screeningsSnapshot = await screeningsCollection.where('profileId', '==', profileId).get();
     
-    // Delete profile
-    await profileRef.delete();
-    
+    if (!screeningsSnapshot.empty) {
+      screeningsSnapshot.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+    }
+
+    // Delete the profile itself
+    batch.delete(profileRef);
+
+    // Commit the batch
+    await batch.commit();
+
     res.status(200).json({
       success: true,
-      message: 'Profile deleted successfully'
+      message: 'Profile and associated screenings deleted successfully'
     });
   } catch (error) {
-    console.error('Error deleting profile:', error);
+    console.error('Error deleting profile and screenings:', error);
     res.status(500).json({
       success: false,
-      error: 'Server error'
+      error: 'Server error during profile deletion'
     });
   }
 };

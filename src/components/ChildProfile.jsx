@@ -10,7 +10,8 @@ function ChildProfile({
     onEditChild, 
     onSaveChild,
     onCancelEdit,
-    editingChild
+    editingChild,
+    onDeleteChild
 }) {
     const [editChildName, setEditChildName] = useState(editingChild ? editingChild.name : '');
     const [editChildAge, setEditChildAge] = useState(editingChild ? editingChild.age : '');
@@ -110,7 +111,11 @@ function ChildProfile({
     const avatarUrl = selectedChild?.photoUrl || getDefaultAvatar(selectedChild?.name);
 
     if (!selectedChild) {
-        return <div>No child selected</div>;
+        return (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#777' }}>
+                <p style={{ fontSize: '1.1rem' }}>Please select a child from the list or add a new child profile.</p>
+            </div>
+        );
     }
 
     if (editingChild && editingChild.id === selectedChild.id) {
@@ -258,42 +263,39 @@ function ChildProfile({
 
     return (
         <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h2 className="sfs-hero-title" style={{ fontSize: '2rem', margin: 0 }}>
-                    {selectedChild.name}'s Profile
-                </h2>
-                <button
-                    onClick={() => onEditChild(selectedChild)}
-                    className="sfs-link"
-                    style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#111',
-                        fontWeight: 700,
-                        fontSize: '1rem',
-                        cursor: 'pointer'
-                    }}
-                >
-                    <FaPen />
-                </button>
-            </div>
-
             <div style={{ textAlign: 'center' }}>
-                <img
-                    src={avatarUrl}
-                    alt="Child Profile"
-                    className="sfs-photo"
-                    style={{
-                        width: '150px',
-                        height: '150px',
-                        borderRadius: '50%',
-                        objectFit: 'cover',
-                        marginBottom: '1.5rem'
-                    }}
-                />
-                <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#111', marginBottom: '0.5rem' }}>
-                    {selectedChild.name}
+                <div style={{ position: 'relative', display: 'inline-block', marginBottom: '1rem' }}>
+                    <img 
+                        src={avatarUrl} 
+                        alt={`${selectedChild.name}'s profile`} 
+                        className="sfs-photo"
+                        style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover' }}
+                    />
+                    {/* <button 
+                        onClick={() => onDeleteChild(selectedChild.id)} 
+                        title="Delete Profile"
+                        style={{
+                            position: 'absolute',
+                            top: '5px',
+                            left: '5px',
+                            background: 'rgba(255, 255, 255, 0.9)',
+                            border: '1px solid #eee',
+                            borderRadius: '50%',
+                            width: '30px',
+                            height: '30px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                        }}
+                    >
+                        <FaTrash style={{ color: '#dc3545', fontSize: '0.9rem' }} />
+                    </button> */}
                 </div>
+                <h2 className="sfs-hero-title" style={{ fontSize: '1.8rem', marginBottom: '0.25rem' }}>
+                    {selectedChild.name}
+                </h2>
                 <div style={{ fontSize: '1rem', color: '#666', marginBottom: '1.5rem' }}>
                     Age: {selectedChild.age}
                 </div>
