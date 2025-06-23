@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+// Define API endpoints
+const API_URL = 'http://localhost:5002/api';
+const AI_SUMMARY_ENDPOINT = `${API_URL}/ai/summary`;
+
 // Updated categories to use string IDs that match the backend ('q1', 'q2', etc.)
 const CATEGORIES = {
     'Social Awareness & Interaction': ['q1', 'q2', 'q4', 'q5', 'q7', 'q12', 'q13', 'q15'],
@@ -17,21 +21,21 @@ const RESPONSE_COLORS = {
 };
 
 // Base URL for local Node backend API
-const API_BASE_URL = window.location.hostname === 'localhost' 
+const API_BASE_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:5002/api'
     : 'https://us-central1-smiles-for-speech-1b81d.cloudfunctions.net';
 
 // Endpoint for AI summary based on environment
-const AI_SUMMARY_ENDPOINT = window.location.hostname === 'localhost'
+const AI_SUMMARY_ENDPOINT_ENV = window.location.hostname === 'localhost'
     ? `${API_BASE_URL}/ai/summary`
     : `${API_BASE_URL}/generateOpenAISummary`;
 
 const getSummaryForGroup = (counts) => {
     const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
-    // For autism screening, "never" and "rarely" are concerning indicators (higher risk)
-    const concerningResponses = (counts.never || 0) + (counts.rarely || 0);
-    // "always" and "often" are positive indicators (lower risk)
-    const positiveResponses = (counts.always || 0) + (counts.often || 0);
+    // For autism screening, "never" and "rarely" are positive indicators (lower risk)
+    const positiveResponses = (counts.never || 0) + (counts.rarely || 0);
+    // "always" and "often" are concerning indicators (higher risk)
+    const concerningResponses = (counts.always || 0) + (counts.often || 0);
 
     if (positiveResponses >= total / 2) return "Your child shows typical development in this area.";
     if (concerningResponses >= total / 2) return "Some behaviors in this area may need further evaluation. Consider speaking to a specialist.";
@@ -60,7 +64,7 @@ const calculateRiskLevel = (answers) => {
     // Count concerning responses (never/rarely)
     let concerningCount = 0;
     const concerningResponses = [];
-    
+
     Object.entries(answers).forEach(([qid, answer]) => {
         const lowerAnswer = (answer || '').toLowerCase();
         if (lowerAnswer === 'never' || lowerAnswer === 'rarely') {
@@ -68,7 +72,7 @@ const calculateRiskLevel = (answers) => {
             concerningResponses.push(qid);
         }
     });
-    
+
     console.log('RISK CALCULATION DETAILS:', {
         totalQuestions: Object.keys(answers).length,
         concerningCount,
@@ -76,7 +80,7 @@ const calculateRiskLevel = (answers) => {
         threshold1: 4, // Medium risk threshold
         threshold2: 8  // High risk threshold
     });
-    
+
     // MCHAT-inspired thresholds (adapted for this screening)
     if (concerningCount >= 8) return 'High';       // 8+ concerning answers → High risk
     if (concerningCount >= 4) return 'Medium';     // 4-7 concerning answers → Medium risk
@@ -537,9 +541,9 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
                         width: '4rem',
                         height: '4rem',
                         borderRadius: '50%',
-                        background: riskLevel === 'High' ? RESPONSE_COLORS.never : 
-                                   riskLevel === 'Medium' ? RESPONSE_COLORS.sometimes : 
-                                   RESPONSE_COLORS.always,
+                        background: riskLevel === 'High' ? RESPONSE_COLORS.never :
+                            riskLevel === 'Medium' ? RESPONSE_COLORS.sometimes :
+                                RESPONSE_COLORS.always,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
