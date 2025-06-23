@@ -3,7 +3,7 @@
  */
 
 // The base URL for all API requests
-const API_URL = 'http://localhost:5001/api';
+const API_URL = 'http://localhost:5002/api';
 
 /**
  * Helper to make API requests with appropriate headers
@@ -12,7 +12,7 @@ const fetchWithAuth = async (endpoint, options = {}) => {
   // Get token from localStorage if we implement auth later
   const token = localStorage.getItem('token');
   console.log(`API Request to ${endpoint} - Token exists: ${!!token}`);
-  
+
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
@@ -32,11 +32,11 @@ const fetchWithAuth = async (endpoint, options = {}) => {
   console.log(`Sending request to: ${API_URL}${endpoint}`);
   const response = await fetch(`${API_URL}${endpoint}`, config);
   console.log(`Response status from ${endpoint}: ${response.status}`);
-  
+
   if (!response.ok) {
     const error = await response.json();
     console.error(`API error from ${endpoint}:`, error);
-    
+
     // Check if this is an authentication error (401)
     if (response.status === 401) {
       // For login endpoint specifically, show "Wrong password"
@@ -46,10 +46,10 @@ const fetchWithAuth = async (endpoint, options = {}) => {
         throw new Error(error.message || 'Authentication failed');
       }
     }
-    
+
     throw new Error(error.message || 'Something went wrong');
   }
-  
+
   return response.json();
 };
 
@@ -64,7 +64,7 @@ export const authAPI = {
       body: JSON.stringify({ email, password }),
     });
   },
-  
+
   // Register user
   register: async (userData) => {
     return fetchWithAuth('/auth/register', {
@@ -72,7 +72,7 @@ export const authAPI = {
       body: JSON.stringify(userData),
     });
   },
-  
+
   // Verify email with verification code
   verifyEmail: async (oobCode) => {
     return fetchWithAuth(`/auth/verify-email?oobCode=${oobCode}`);
@@ -82,7 +82,7 @@ export const authAPI = {
   checkEmailVerification: async () => {
     return fetchWithAuth('/users/me');
   },
-  
+
   // Request password reset email
   forgotPassword: async (email) => {
     return fetchWithAuth('/auth/forgot-password', {
@@ -90,7 +90,7 @@ export const authAPI = {
       body: JSON.stringify({ email }),
     });
   },
-  
+
   // Reset password with code and new password
   resetPassword: async (oobCode, newPassword) => {
     return fetchWithAuth('/auth/reset-password', {
@@ -98,7 +98,7 @@ export const authAPI = {
       body: JSON.stringify({ oobCode, newPassword }),
     });
   },
-  
+
   // Update user profile
   updateProfile: async (profileData) => {
     console.log('Sending profile update request with data:', profileData);
@@ -111,16 +111,16 @@ export const authAPI = {
         },
         body: JSON.stringify(profileData)
       });
-      
+
       console.log('Profile update response status:', response.status);
-      
+
       // If response is not ok, throw error
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Profile update failed with error:', errorData);
         throw new Error(errorData.error || 'Failed to update profile');
       }
-      
+
       return response.json();
     } catch (error) {
       console.error('Profile update exception:', error);
@@ -135,10 +135,10 @@ export const authAPI = {
 export const profilesAPI = {
   // Get all profiles for current user
   getProfiles: () => fetchWithAuth('/profiles'),
-  
+
   // Get single profile
   getProfile: (id) => fetchWithAuth(`/profiles/${id}`),
-  
+
   // Create new profile
   createProfile: (profileData) => {
     return fetchWithAuth('/profiles', {
@@ -146,7 +146,7 @@ export const profilesAPI = {
       body: JSON.stringify(profileData),
     });
   },
-  
+
   // Update profile
   updateProfile: (id, profileData) => {
     return fetchWithAuth(`/profiles/${id}`, {
@@ -154,7 +154,7 @@ export const profilesAPI = {
       body: JSON.stringify(profileData),
     });
   },
-  
+
   // Delete profile
   deleteProfile: (id) => {
     return fetchWithAuth(`/profiles/${id}`, {
@@ -169,17 +169,34 @@ export const profilesAPI = {
 export const screeningAPI = {
   // Get screening questions
   getQuestions: () => fetchWithAuth('/screenings/questions'),
-  
+
   // Get screenings for a profile
-  getScreeningsByProfile: (profileId) => fetchWithAuth(`/screenings/profile/${profileId}`),
-  
+  getScreeningsByProfile: (profileId) => {
+    // Allow for cache-busting parameter in profile ID
+    const endpoint = profileId.includes('?') 
+      ? `/screenings/profile/${profileId}` 
+      : `/screenings/profile/${profileId}`;
+    return fetchWithAuth(endpoint);
+  },
+
   // Get a single screening
   getScreening: (id) => fetchWithAuth(`/screenings/${id}`),
-  
+
+  // Get a single screening by ID (alias for getScreening for consistency)
+  getScreeningById: (id) => fetchWithAuth(`/screenings/${id}`),
+
   // Create a screening
   createScreening: (screeningData) => {
     return fetchWithAuth('/screenings', {
       method: 'POST',
+      body: JSON.stringify(screeningData),
+    });
+  },
+  
+  // Update a screening
+  updateScreening: (id, screeningData) => {
+    return fetchWithAuth(`/screenings/${id}`, {
+      method: 'PUT',
       body: JSON.stringify(screeningData),
     });
   },
@@ -194,10 +211,10 @@ export const resourcesAPI = {
     const endpoint = category ? `/resources?category=${category}` : '/resources';
     return fetchWithAuth(endpoint);
   },
-  
+
   // Get local resources for Ghana
   getLocalResources: () => fetchWithAuth('/resources/local'),
-  
+
   // Get resources by risk level
   getResourcesByRiskLevel: (riskLevel) => fetchWithAuth(`/resources/recommendations/${riskLevel}`),
 };
@@ -212,26 +229,26 @@ export const uploadAPI = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);
-    
+
     const headers = {};
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
-    
+
     const response = await fetch(`${API_URL}/upload`, {
       method: 'POST',
       headers,
       body: formData,
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to upload file');
     }
-    
+
     return response.json();
   },
-  
+
   // Get file URL
   getFileUrl: (filePath) => fetchWithAuth(`/upload/${filePath}`),
 }; 

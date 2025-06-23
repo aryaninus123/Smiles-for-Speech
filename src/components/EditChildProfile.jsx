@@ -38,6 +38,7 @@ function EditChildProfile({ child, onSave, onCancel }) {
             setIsLoading(false);
         }
     };
+    
 
     return (
         <div style={{ padding: '20px' }}>

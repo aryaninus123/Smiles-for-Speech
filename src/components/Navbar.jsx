@@ -27,12 +27,12 @@ function Navbar() {
                 <div className="sfs-navbar-links">
                     <Link to="/" className="sfs-link">Home</Link>
                     <Link to="/about" className="sfs-link">About Us</Link>
-                    <Link to="/education" className="sfs-link">Learn About Autism</Link>
+                    <Link to="/education" className="sfs-link">Learn More</Link>
                     {auth ? (
                         <>
                             <Link to="/profile" className="sfs-link">Profile</Link>
-                            <button 
-                                onClick={handleLogout} 
+                            <button
+                                onClick={handleLogout}
                                 className="sfs-login-btn"
                                 aria-label="Log out of your account"
                             >
@@ -41,8 +41,8 @@ function Navbar() {
                         </>
                     ) : (
                         location.pathname !== '/login' && (
-                            <Link 
-                                to="/login" 
+                            <Link
+                                to="/login"
                                 className="sfs-login-btn"
                                 aria-label="Log in to your account"
                             >

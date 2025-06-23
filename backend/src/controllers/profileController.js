@@ -2,6 +2,7 @@ const { db } = require('../config/firebase');
 
 // Child profiles collection reference
 const profilesCollection = db.collection('childProfiles');
+const screeningsCollection = db.collection('screenings');
 
 /**
  * Get all child profiles for a parent
@@ -124,6 +125,17 @@ const createProfile = async (req, res) => {
   }
 };
 
+// Helper function to remove undefined values from an object
+const removeUndefinedValues = (obj) => {
+  const result = {};
+  Object.keys(obj).forEach(key => {
+    if (obj[key] !== undefined) {
+      result[key] = obj[key];
+    }
+  });
+  return result;
+};
+
 /**
  * Update a child profile
  * @route PUT /api/profiles/:id
@@ -131,7 +143,8 @@ const createProfile = async (req, res) => {
  */
 const updateProfile = async (req, res) => {
   try {
-    const { name, birthDate, gender, developmentHistory, photoUrl } = req.body;
+    // Filter out undefined values from the request body
+    const filteredBody = removeUndefinedValues(req.body);
     
     // Check if profile exists
     const profileRef = profilesCollection.doc(req.params.id);
@@ -153,16 +166,20 @@ const updateProfile = async (req, res) => {
       });
     }
     
-    // Update profile
+    // Create updatedData object using filtered body values or existing profile values
     const updatedData = {
-      name: name || profileData.name,
-      birthDate: birthDate || profileData.birthDate,
-      gender: gender || profileData.gender,
-      developmentHistory: developmentHistory || profileData.developmentHistory,
-      photoUrl: photoUrl || profileData.photoUrl,
       updatedAt: new Date().toISOString()
     };
     
+    // Only set properties that exist in the filtered body or fallback to existing values
+    if ('name' in filteredBody) updatedData.name = filteredBody.name;
+    if ('birthDate' in filteredBody) updatedData.birthDate = filteredBody.birthDate;
+    if ('gender' in filteredBody) updatedData.gender = filteredBody.gender;
+    if ('developmentHistory' in filteredBody) updatedData.developmentHistory = filteredBody.developmentHistory;
+    if ('photoUrl' in filteredBody) updatedData.photoUrl = filteredBody.photoUrl;
+    if ('latestAssessmentId' in filteredBody) updatedData.latestAssessmentId = filteredBody.latestAssessmentId;
+    
+    console.log('Updating profile with data:', updatedData);
     await profileRef.update(updatedData);
     
     res.status(200).json({
@@ -189,38 +206,52 @@ const updateProfile = async (req, res) => {
  */
 const deleteProfile = async (req, res) => {
   try {
-    // Check if profile exists
-    const profileRef = profilesCollection.doc(req.params.id);
+    const profileId = req.params.id;
+    const profileRef = profilesCollection.doc(profileId);
     const profileDoc = await profileRef.get();
-    
+
     if (!profileDoc.exists) {
       return res.status(404).json({
         success: false,
         error: 'Profile not found'
       });
     }
-    
-    // Check if user owns this profile
+
     const profileData = profileDoc.data();
-    if (profileData.parentUid !== req.user.uid) {
+    if (profileData.parentUid !== req.user.uid) { 
       return res.status(403).json({
         success: false,
         error: 'Not authorized to delete this profile'
       });
     }
+
+    // Batch delete for screenings
+    const batch = db.batch();
+
+    // Find and delete associated screenings
+    const screeningsSnapshot = await screeningsCollection.where('profileId', '==', profileId).get();
     
-    // Delete profile
-    await profileRef.delete();
-    
+    if (!screeningsSnapshot.empty) {
+      screeningsSnapshot.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+    }
+
+    // Delete the profile itself
+    batch.delete(profileRef);
+
+    // Commit the batch
+    await batch.commit();
+
     res.status(200).json({
       success: true,
-      message: 'Profile deleted successfully'
+      message: 'Profile and associated screenings deleted successfully'
     });
   } catch (error) {
-    console.error('Error deleting profile:', error);
+    console.error('Error deleting profile and screenings:', error);
     res.status(500).json({
       success: false,
-      error: 'Server error'
+      error: 'Server error during profile deletion'
     });
   }
 };
