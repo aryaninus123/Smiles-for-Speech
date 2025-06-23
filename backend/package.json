@@ -20,6 +20,7 @@
     "mongoose": "^6.0.13",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.2",
+    "openai": "^4.100.0",
     "uuid": "7.0.3"
   },
   "devDependencies": {

@@ -79,6 +79,9 @@ function ResultsPage() {
     }, [id]);
 
     const handleBackToProfile = () => {
+        // Set flag to refresh profile data when we return
+        sessionStorage.setItem('refreshProfileAfterAssessment', 'true');
+        
         // If we have child info, navigate to that child's profile
         if (childInfo && childInfo.id) {
             history.push(`/profile#child-${childInfo.id}`);
@@ -88,6 +91,9 @@ function ResultsPage() {
     };
 
     const handleTakeNewAssessment = () => {
+        // Set flag to refresh profile data when assessment is complete
+        sessionStorage.setItem('refreshProfileAfterAssessment', 'true');
+        
         if (childInfo && childInfo.id) {
             history.push(`/assessment/${childInfo.id}`);
         } else {

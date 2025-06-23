@@ -452,26 +452,26 @@ const generateRecommendations = (score) => {
   if (score >= 30) {
     riskLevel = 'High';
     recommendations = [
-      'Consult with a developmental pediatrician or child psychologist as soon as possible',
-      'Contact your local early intervention services',
-      'Schedule a comprehensive evaluation',
-      'Consider joining a parent support group'
+      'The screening results indicate some behaviors that may suggest further evaluation is needed',
+      'It\'s recommended to discuss these observations with a healthcare professional for guidance',
+      'Early intervention can be beneficial if further support is needed',
+      'Consider a comprehensive developmental assessment with a specialist'
     ];
   } else if (score >= 15) {
     riskLevel = 'Medium';
     recommendations = [
-      'Discuss these results with your child\'s healthcare provider',
-      'Consider a follow-up screening in 3 months',
-      'Monitor your child\'s development closely',
-      'Explore developmental stimulation activities'
+      'The screening results suggest monitoring your child\'s development',
+      'Consider discussing these observations with a healthcare professional',
+      'Engage in activities that strengthen social communication skills',
+      'Schedule a follow-up assessment in 3-6 months'
     ];
   } else {
     riskLevel = 'Low';
     recommendations = [
-      'Continue monitoring your child\'s development',
-      'Engage in regular developmental play activities',
-      'Return for another screening at the next age milestone',
-      'Discuss any new concerns with your healthcare provider'
+      'Your child is showing typical development patterns',
+      'Continue engaging in interactive play and communication activities',
+      'Celebrate your child\'s social communication strengths',
+      'Regular developmental check-ups are still recommended'
     ];
   }
 

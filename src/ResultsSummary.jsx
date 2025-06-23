@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 // Define API endpoints
 const API_URL = 'http://localhost:5002/api';
@@ -49,13 +49,27 @@ const getOverallSummary = (totalCounts) => {
     // "always" and "often" are positive indicators (lower risk)
     const positiveResponses = (totalCounts.always || 0) + (totalCounts.often || 0);
 
-    if (positiveResponses >= total / 2) {
-        return "Your child shows many typical social communication behaviors. Keep supporting their growth!";
+    // Calculate risk level similar to calculateRiskLevel function
+    let riskLevel;
+    if (concerningResponses >= 8) {
+        riskLevel = 'High';
+    } else if (concerningResponses >= 4) {
+        riskLevel = 'Medium';
+    } else {
+        riskLevel = 'Low';
     }
-    if (concerningResponses >= total / 2) {
+
+    // Return different messages based on risk level
+    if (riskLevel === 'Low') {
+        return "Your child is showing typical development patterns\n" +
+               "Continue engaging in interactive play and communication activities\n" +
+               "Celebrate your child's social communication strengths\n" +
+               "Regular developmental check-ups are still recommended";
+    } else if (riskLevel === 'Medium') {
+        return "The screening results show some behaviors that may benefit from continued observation. Consider discussing the results with a developmental specialist.";
+    } else {
         return "The screening results indicate some behaviors that may suggest further evaluation is needed. It's recommended to discuss these observations with a healthcare professional for guidance.";
     }
-    return "Your child shows some behaviors that may benefit from continued observation. Consider discussing the results with a developmental specialist.";
 };
 
 // Calculate risk level using MCHAT-inspired thresholds
@@ -94,10 +108,16 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
     const [aiSummary, setAiSummary] = useState(null);
     const [loadingAiSummary, setLoadingAiSummary] = useState(false);
     const [aiError, setAiError] = useState(null);
+<<<<<<< HEAD
     const [searchResults, setSearchResults] = useState([]);
     const [searchLoading, setSearchLoading] = useState(false);
+=======
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [searchResults, setSearchResults] = useState([]);
+>>>>>>> 6602e573b49d14347bb156fcad3765d2ada963ab
     const categoryCounts = {};
     const totalCounts = { always: 0, often: 0, sometimes: 0, rarely: 0, never: 0 };
+    const history = useHistory();
 
     // Process answers differently based on whether they're from direct user input or savedResult
     let processedAnswers = answers;
@@ -164,8 +184,12 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
         "Look into local early intervention programs that can provide additional support if needed."
     ];
 
+<<<<<<< HEAD
     // Local resources data
     const localResources = [
+=======
+const localResources = [
+>>>>>>> 6602e573b49d14347bb156fcad3765d2ada963ab
         {
             title: 'Autism Awareness Care and Training (AACT)',
             link: 'https://aact-ghana.org/',
@@ -188,6 +212,7 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
         }
     ];
 
+<<<<<<< HEAD
     const getUserLocation = () => {
         if (!navigator.geolocation) {
             setError('Geolocation is not supported by your browser.');
@@ -214,6 +239,9 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
     };
 
     const searchNearbyResources = () => {
+=======
+const searchNearbyResources = () => {
+>>>>>>> 6602e573b49d14347bb156fcad3765d2ada963ab
         if (!location) {
             setError('Please get your location first');
             return;
@@ -315,8 +343,31 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
                     setAiError(summaryData.errorParsing || 'AI summary was not in the expected format.');
                     console.warn('Received raw summary or parsing error from Firebase function:', summaryData);
                 } else {
-                    setAiError('Unable to generate AI summary. Using default recommendations.');
-                    console.warn('Received incomplete or unexpected summary from Firebase function:', summaryData);
+                    // Provide risk-appropriate summary based on risk level
+                    if (riskLevel === 'Low') {
+                        // Custom positive message for Low risk level
+                        setAiSummary({
+                            overallSummary: "Your child is showing typical development patterns\n" +
+                                "Continue engaging in interactive play and communication activities\n" +
+                                "Celebrate your child's social communication strengths\n" +
+                                "Regular developmental check-ups are still recommended",
+                            positiveObservations: [
+                                "Shows a good foundation in responsive social behaviors",
+                                "Demonstrates engagement in social interactions",
+                                "Shows interest in communication with others"
+                            ],
+                            areasForSupport: [],
+                            recommendations: [
+                                "Continue with normal developmental activities and play",
+                                "Engage in conversations and interactive games",
+                                "Regular developmental check-ups are still recommended"
+                            ]
+                        });
+                        console.log('Using custom Low risk summary');
+                    } else {
+                        // Default message for Medium and High risk levels
+                        setAiError('Unable to generate AI summary. Using default recommendations.');
+                    }
                 }
 
             } catch (error) {
@@ -361,6 +412,170 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
             {label}
         </button>
     );
+<<<<<<< HEAD
+=======
+     // Near You Tab content
+    const renderNearYouTab = () => (
+        <>
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <h3 style={{ color: '#333', marginBottom: '1rem', fontSize: '1.2rem' }}>Find Resources Near You</h3>
+                <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+                    Click the button below to find special needs and speech therapy resources in your area.
+                </p>
+
+                <button
+                    onClick={getUserLocation}
+                    style={{
+                        padding: '12px 20px',
+                        backgroundColor: '#4caf50',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                        fontSize: '1rem',
+                        marginRight: location ? '1rem' : '0'
+                    }}
+                >
+                    {location ? '✓ Location Found' : 'Find My Location'}
+                </button>
+
+                {location && (
+                    <button
+                        onClick={searchNearbyResources}
+                        style={{
+                            padding: '12px 20px',
+                            backgroundColor: '#2196F3',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                            fontSize: '1rem'
+                        }}
+                        disabled={searchLoading}
+                    >
+                        {searchLoading ? 'Searching...' : 'Search All Resources'}
+                    </button>
+                )}
+            </div>
+
+            {error && (
+                <div style={{
+                    padding: '0.75rem 1rem',
+                    backgroundColor: '#ffebee',
+                    color: '#c62828',
+                    borderRadius: '0.5rem',
+                    marginBottom: '1.5rem',
+                    textAlign: 'center'
+                }}>
+                    {error}
+                </div>
+            )}
+
+            {searchLoading && (
+                <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                    <div style={{
+                        display: 'inline-block',
+                        borderTop: '3px solid #2196F3',
+                        borderRight: '3px solid transparent',
+                        borderBottom: '3px solid transparent',
+                        borderLeft: '3px solid transparent',
+                        borderRadius: '50%',
+                        width: '30px',
+                        height: '30px',
+                        animation: 'spin 1s linear infinite'
+                    }}></div>
+                    <p style={{ marginTop: '1rem', color: '#666' }}>Searching for resources near you...</p>
+                    <style>{`
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                    `}</style>
+                </div>
+            )}
+
+            {/* Display resources section - show when search is complete or as default */}
+            {!searchLoading && (
+                <div style={{
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '0.75rem',
+                    padding: '1.5rem',
+                    marginBottom: '2rem'
+                }}>
+                    <h3 style={{
+                        fontSize: '1.1rem',
+                        marginBottom: '1rem',
+                        color: '#333'
+                    }}>
+                        {searchResults.length > 0 ? 'Resources Near You' : 'Local Resources'}
+                    </h3>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {(searchResults.length > 0 ? searchResults : localResources).map((resource, index) => (
+                            <div
+                                key={index}
+                                style={{
+                                    padding: '1rem',
+                                    backgroundColor: 'white',
+                                    borderRadius: '0.5rem',
+                                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                    border: '1px solid #e0e0e0'
+                                }}
+                            >
+                                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', color: '#1976d2' }}>
+                                    {resource.title || resource.name}
+                                </h4>
+                                <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', color: '#666' }}>
+                                    {resource.snippet || resource.services || ''}
+                                </p>
+                                {resource.location && (
+                                    <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', color: '#666' }}>
+                                        Location: {resource.location}
+                                    </p>
+                                )}
+                                {resource.contact && (
+                                    <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', color: '#666' }}>
+                                        Contact: {resource.contact}
+                                    </p>
+                                )}
+                                {resource.link && (
+                                    <div style={{ textAlign: 'right' }}>
+                                        <a
+                                            href={resource.link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{
+                                                display: 'inline-block',
+                                                padding: '0.5rem 1rem',
+                                                backgroundColor: '#e3f2fd',
+                                                color: '#1976d2',
+                                                borderRadius: '0.25rem',
+                                                textDecoration: 'none',
+                                                fontWeight: '500',
+                                                fontSize: '0.9rem'
+                                            }}
+                                        >
+                                            Visit Website
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </>
+    );
+    const getUserLocation = () => {
+        if (!navigator.geolocation) {
+            setError('Geolocation is not supported by your browser.');
+            return;
+        }
+>>>>>>> 6602e573b49d14347bb156fcad3765d2ada963ab
 
     // Near You Tab content
     const renderNearYouTab = () => (
@@ -798,12 +1013,21 @@ function ResultsSummary({ answers, savedResult, onBack, childInfo }) {
                                 </li>
                             ))}
                         </ul>
+<<<<<<< HEAD
 
 
                     </>
                 ) : (
                     // Near You Tab
                     renderNearYouTab()
+=======
+                    </>
+                ) : (
+                    // Near You Tab
+                    
+ renderNearYouTab()
+                    
+>>>>>>> 6602e573b49d14347bb156fcad3765d2ada963ab
                 )}
             </div>
 
